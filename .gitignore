@@ -1,0 +1,7 @@
+Spatio/
+*.qgz
+*.csv
+*.xlsx
+*.tif
+*.tif.aux.xml
+WVR_graph.html
