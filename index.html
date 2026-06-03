@@ -661,13 +661,15 @@
     // ════════════════════════════════════════════════════════
     // Plugin: monthly epoch bands + vertical lines
     const maCtryEl = document.getElementById('maCtry');
-    COUNTRIES.forEach((c, i) => { const o = document.createElement('option'); o.value = c; o.textContent = c; maCtryEl.appendChild(o); });
+    [...COUNTRIES, 'SE Asia Avg'].forEach((c) => { const o = document.createElement('option'); o.value = c; o.textContent = c; maCtryEl.appendChild(o); });
 
     function buildMADS(country) {
-      const m = RAW[country];
+      const isSEA = country === 'SE Asia Avg';
+      const m = isSEA ? seaAvgMonthly : RAW[country];
+      const lineColor = isSEA ? 'rgba(255,255,255,0.5)' : 'rgba(96,165,250,0.45)';
       return [
         {
-          label: 'Monthly WVR', data: [...m], borderColor: 'rgba(96,165,250,0.45)', backgroundColor: 'transparent',
+          label: 'Monthly WVR', data: [...m], borderColor: lineColor, backgroundColor: 'transparent',
           borderWidth: 1, pointRadius: 0, tension: 0.2, order: 2
         },
         {
