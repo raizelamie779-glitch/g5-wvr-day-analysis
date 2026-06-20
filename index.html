@@ -479,7 +479,10 @@
         </div>
       </div>
       <div id="trendCtrl">
-        <div class="actrl"><label class="clbl">Country: <select id="mainCtry"></select></label></div>
+        <div class="actrl">
+          <label class="clbl">Country: <select id="mainCtry"></select></label>
+          <button class="cbtn" onclick="downloadTrendCSV()" style="border-color:#374151;color:#374151;margin-left:8px">⬇ Download CSV</button>
+        </div>
       </div>
       <div id="maCtrlTop" style="display:none">
         <div class="actrl"><label class="clbl">Country: <select id="maCtry"></select></label></div>
@@ -1209,6 +1212,32 @@
       else if (currentMode === 'ma') buildDataTable(val, true);
       else if (currentMode === 'acf') { buildACFCards(val); buildACFTable(val); }
       else if (currentMode === 'uni') { buildUniStats(val); buildDataTable(val, false); }
+    }
+
+    // ════════════════════════════════════════════════════════
+    // TREND CSV DOWNLOAD — slope per country × epoch
+    // ════════════════════════════════════════════════════════
+    function downloadTrendCSV() {
+      const allCountries = [...COUNTRIES, 'SE Asia Avg'];
+      const epLabels = EPOCHS.map(ep => `"${ep.label}"`);
+      const rows = ['Country,' + epLabels.join(',')];
+      allCountries.forEach(country => {
+        const isSEA = country === 'SE Asia Avg';
+        const monthly = isSEA ? seaAvgMonthly : RAW[country];
+        const slopes = EPOCHS.map(ep => {
+          const mxs = Array.from({ length: ep.me - ep.ms + 1 }, (_, k) => ep.ms + k);
+          const mys = mxs.map(x => monthly[x]);
+          const { m } = linReg(mxs, mys);
+          const mPerYear = m * 12;
+          const sign = mPerYear >= 0 ? '+' : '';
+          return `"${sign}${mPerYear.toFixed(4)} g/kg/yr"`;
+        });
+        rows.push([country === 'SE Asia Avg' ? 'SEA' : country, ...slopes].join(','));
+      });
+      const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'Trend_slope_by_epoch.csv';
+      a.click(); URL.revokeObjectURL(url);
     }
 
     // ════════════════════════════════════════════════════════
