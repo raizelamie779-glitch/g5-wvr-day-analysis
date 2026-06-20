@@ -695,9 +695,17 @@
         const dir = mPerYear > 0.02 ? '↑ Increasing' : mPerYear < -0.02 ? '↓ Decreasing' : '→ Stable';
         const cls = dir === '↑ Increasing' ? 'tup' : dir === '↓ Decreasing' ? 'tdn' : 'tst';
         const n = mys.length;
-        const vals = acf(mys, 24).slice(1);
+        const vals = acf(mys, 12).slice(1);
         const ci = +(1.96 / Math.sqrt(n)).toFixed(4);
-        const lag1 = +vals[0].toFixed(4), lag2 = +vals[1].toFixed(4);
+        const lagVals = [
+          { label: 'Autocorrelation Lag-1',  v: +vals[0].toFixed(4) },
+          { label: 'Autocorrelation Lag-3',  v: +vals[2].toFixed(4) },
+          { label: 'Autocorrelation Lag-6',  v: +vals[5].toFixed(4) },
+          { label: 'Autocorrelation Lag-12', v: +vals[11].toFixed(4) },
+        ];
+        const lagRows = lagVals.map(({ label, v }) =>
+          `<div class="est"><span>${label}</span><span style="color:${Math.abs(v) > ci ? '#c0392b' : '#57606a'}">${v >= 0 ? '+' : ''}${v}</span></div>`
+        ).join('');
         const c = document.createElement('div'); c.className = 'epc';
         c.innerHTML = `<h3 style="color:${ep.color};border-color:${ep.color}">Epoch ${i + 1}: ${ep.label}</h3>
       <div class="est"><span>Mean</span><span>${st.mean.toFixed(3)} g/kg</span></div>
@@ -707,8 +715,7 @@
       <div class="est"><span>Slope</span><span>${mPerYear >= 0 ? '+' : ''}${mPerYear.toFixed(4)} g/kg/yr</span></div>
       <div class="est"><span>Trend</span><span class="${cls}">${dir}</span></div>
       <div style="border-top:1px solid #d0d7de;margin:7px 0"></div>
-      <div class="est"><span>ACF Lag-1</span><span style="color:${Math.abs(lag1) > ci ? '#c0392b' : '#57606a'}">${lag1 >= 0 ? '+' : ''}${lag1}</span></div>
-      <div class="est"><span>ACF Lag-2</span><span style="color:${Math.abs(lag2) > ci ? '#c0392b' : '#57606a'}">${lag2 >= 0 ? '+' : ''}${lag2}</span></div>
+      ${lagRows}
       <div class="est" style="font-size:.7rem;color:#6e7681"><span>95% CI</span><span>±${ci}</span></div>`;
         panel.appendChild(c);
       });
