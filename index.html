@@ -1014,8 +1014,11 @@
       EPOCHS.forEach((ep) => {
         const epYears = YEARS.slice(ep.start, ep.end + 1);
         const epData = monthly.slice(ep.ms, ep.me + 1);
-        const epMean = epData.reduce((s, v) => s + v, 0) / epData.length;
-        const epDev = epData.map(v => v - epMean);
+        // Round WVR and mean to 4dp first so all displayed values are self-consistent:
+        // deviation = displayed WVR − displayed mean (verifiable by hand)
+        const epData4 = epData.map(v => parseFloat(v.toFixed(4)));
+        const epMean4 = parseFloat((epData.reduce((s, v) => s + v, 0) / epData.length).toFixed(4));
+        const epDev = epData4.map(v => parseFloat((v - epMean4).toFixed(4)));
 
         epYears.forEach((year, yi) => {
           const yr = document.createElement('tr');
@@ -1029,7 +1032,7 @@
             const tr = document.createElement('tr');
             tr.innerHTML =
               `<td class="dtbl-month">${month}</td>` +
-              `<td>${epData[li].toFixed(4)}</td>` +
+              `<td>${epData4[li].toFixed(4)}</td>` +
               `<td>${d.toFixed(4)}</td>` +
               `<td>${(d * d).toFixed(4)}</td>` +
               f4(li >= 1  ? d * epDev[li - 1]  : null) +
