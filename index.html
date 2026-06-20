@@ -366,6 +366,24 @@
     .dtbl tr:hover td {
       background: #f6f8fa;
     }
+    .dtbl-year td {
+      background: #eef4ff;
+      color: #0072BD;
+      font-weight: 700;
+      font-size: .8rem;
+      text-align: left !important;
+      border-top: 2px solid #d0d7de;
+      border-bottom: 1px solid #d0d7de;
+    }
+    .dtbl-month {
+      text-align: left !important;
+      padding-left: 24px !important;
+      color: #57606a;
+      font-weight: 400;
+    }
+    .dtbl td.ma-null {
+      color: #bbb;
+    }
 
     @media(max-width:900px) {
       .epcards {
@@ -657,7 +675,7 @@
       const v = mainCtryEl.value;
       mainChart.data.datasets = buildMainDS(v); mainChart.update();
       buildEpCards(v);
-      buildDataTable(v);
+      buildDataTable(v, false);
     });
 
     // Epoch summary cards — rebuilt whenever country changes
@@ -701,25 +719,53 @@
     // MONTHLY DATA TABLE
     // ════════════════════════════════════════════════════════
     const MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    function buildDataTable(country) {
+    function buildDataTable(country, showMA) {
       const isSEA = country === 'SE Asia Avg';
       const monthly = isSEA ? seaAvgMonthly : RAW[country];
       document.getElementById('dtblCtry').textContent = country;
       const tbl = document.getElementById('dataTable');
       tbl.innerHTML = '';
-      const thead = document.createElement('thead');
-      thead.innerHTML = '<tr><th>Year</th>' + MONTH_LABELS.map(m => `<th>${m}</th>`).join('') + '</tr>';
-      tbl.appendChild(thead);
-      const tbody = document.createElement('tbody');
-      YEARS.forEach((year, yi) => {
-        const tr = document.createElement('tr');
-        const base = yi * 12;
-        tr.innerHTML = `<td>${year}</td>` + MONTH_LABELS.map((_, mi) => `<td>${monthly[base + mi].toFixed(3)}</td>`).join('');
-        tbody.appendChild(tr);
-      });
-      tbl.appendChild(tbody);
+
+      if (!showMA) {
+        // ── Trend view: compact Year × Month grid ──
+        const thead = document.createElement('thead');
+        thead.innerHTML = '<tr><th>Year</th>' + MONTH_LABELS.map(m => `<th>${m}</th>`).join('') + '</tr>';
+        tbl.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        YEARS.forEach((year, yi) => {
+          const tr = document.createElement('tr');
+          const base = yi * 12;
+          tr.innerHTML = `<td>${year}</td>` + MONTH_LABELS.map((_, mi) => `<td>${monthly[base + mi].toFixed(3)}</td>`).join('');
+          tbody.appendChild(tr);
+        });
+        tbl.appendChild(tbody);
+      } else {
+        // ── MA view: vertical with WVR + 3-Month MA columns ──
+        const ma = movAvg(monthly, 3);
+        const thead = document.createElement('thead');
+        thead.innerHTML = '<tr><th>Month</th><th>WVR (g/kg)</th><th>Moving Average (3 month) (g/kg)</th></tr>';
+        tbl.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        YEARS.forEach((year, yi) => {
+          const yearRow = document.createElement('tr');
+          yearRow.className = 'dtbl-year';
+          yearRow.innerHTML = `<td colspan="3">${year}</td>`;
+          tbody.appendChild(yearRow);
+          MONTH_LABELS.forEach((month, mi) => {
+            const idx = yi * 12 + mi;
+            const maVal = ma[idx];
+            const maNull = maVal === null || maVal === undefined;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td class="dtbl-month">${month}</td>` +
+              `<td>${monthly[idx].toFixed(3)}</td>` +
+              `<td class="${maNull ? 'ma-null' : ''}">${maNull ? '—' : maVal.toFixed(3)}</td>`;
+            tbody.appendChild(tr);
+          });
+        });
+        tbl.appendChild(tbody);
+      }
     }
-    buildDataTable(COUNTRIES[0]);
+    buildDataTable(COUNTRIES[0], false);
 
     // ════════════════════════════════════════════════════════
     // MOVING AVERAGE CHART
@@ -777,7 +823,7 @@
       const v = maCtryEl.value;
       maChart.data.datasets = buildMADS(v); maChart.update();
       buildEpCards(v);
-      buildDataTable(v);
+      buildDataTable(v, true);
     });
 
     // View tab switching
@@ -791,6 +837,7 @@
       document.getElementById('tabTrend').classList.add('active');
       document.getElementById('tabMA').classList.remove('active');
       setTimeout(() => mainChart.resize(), 10);
+      buildDataTable(mainCtryEl.value, false);
     });
     document.getElementById('tabMA').addEventListener('click', () => {
       document.getElementById('mainWrap').style.display = 'none';
@@ -802,6 +849,7 @@
       document.getElementById('tabMA').classList.add('active');
       document.getElementById('tabTrend').classList.remove('active');
       setTimeout(() => maChart.resize(), 10);
+      buildDataTable(maCtryEl.value, true);
     });
 
   </script>
