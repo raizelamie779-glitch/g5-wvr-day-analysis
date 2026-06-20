@@ -412,18 +412,15 @@
 
     @media(max-width:900px) {
       .acfgrid { grid-template-columns: 1fr; }
+      .epcards { grid-template-columns: repeat(2, 1fr); }
+      .cw.h520 { height: 360px; }
+      .cw.h400 { height: 280px; }
     }
-      .epcards {
-        grid-template-columns: repeat(2, 1fr)
-      }
 
-      .cw.h520 {
-        height: 380px
-      }
-
-      .cw.h400 {
-        height: 300px
-      }
+    @media(max-width:600px) {
+      .cw.h520 { height: 240px; }
+      .cw.h400 { height: 200px; }
+      .epcards { grid-template-columns: 1fr; }
     }
 
     .vtabs {
