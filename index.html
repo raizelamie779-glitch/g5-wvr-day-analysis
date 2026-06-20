@@ -694,7 +694,7 @@
           legend: { display: false },
           tooltip: {
             backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
-            callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(3)}` } }
+            callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(4)}` } }
           }
         },
         scales: {
@@ -746,9 +746,9 @@
         ).join('');
         const c = document.createElement('div'); c.className = 'epc';
         c.innerHTML = `<h3 style="color:${ep.color};border-color:${ep.color}">Epoch ${i + 1}: ${ep.label}</h3>
-      <div class="est"><span>Mean</span><span>${st.mean.toFixed(3)} g/kg</span></div>
-      <div class="est"><span>Min</span><span>${st.min.toFixed(3)} g/kg</span></div>
-      <div class="est"><span>Max</span><span>${st.max.toFixed(3)} g/kg</span></div>
+      <div class="est"><span>Mean</span><span>${st.mean.toFixed(4)} g/kg</span></div>
+      <div class="est"><span>Min</span><span>${st.min.toFixed(4)} g/kg</span></div>
+      <div class="est"><span>Max</span><span>${st.max.toFixed(4)} g/kg</span></div>
       <div class="est"><span>Std Dev</span><span>${st.std.toFixed(4)}</span></div>
       <div class="est"><span>Slope</span><span>${mPerYear >= 0 ? '+' : ''}${mPerYear.toFixed(4)} g/kg/yr</span></div>
       <div class="est"><span>Trend</span><span class="${cls}">${dir}</span></div>
@@ -779,7 +779,7 @@
         YEARS.forEach((year, yi) => {
           const tr = document.createElement('tr');
           const base = yi * 12;
-          tr.innerHTML = `<td>${year}</td>` + MONTH_LABELS.map((_, mi) => `<td>${monthly[base + mi].toFixed(3)}</td>`).join('');
+          tr.innerHTML = `<td>${year}</td>` + MONTH_LABELS.map((_, mi) => `<td>${monthly[base + mi].toFixed(4)}</td>`).join('');
           tbody.appendChild(tr);
         });
         tbl.appendChild(tbody);
@@ -801,8 +801,8 @@
             const maNull = maVal === null || maVal === undefined;
             const tr = document.createElement('tr');
             tr.innerHTML = `<td class="dtbl-month">${month}</td>` +
-              `<td>${monthly[idx].toFixed(3)}</td>` +
-              `<td class="${maNull ? 'ma-null' : ''}">${maNull ? '—' : maVal.toFixed(3)}</td>`;
+              `<td>${monthly[idx].toFixed(4)}</td>` +
+              `<td class="${maNull ? 'ma-null' : ''}">${maNull ? '—' : maVal.toFixed(4)}</td>`;
             tbody.appendChild(tr);
           });
         });
@@ -843,7 +843,7 @@
           legend: { display: false },
           tooltip: {
             backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
-            callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(3)}` } }
+            callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(4)}` } }
           }
         },
         scales: {
