@@ -1215,7 +1215,7 @@
     // ACF CSV DOWNLOAD — all countries × all epochs
     // ════════════════════════════════════════════════════════
     function downloadACFCSV() {
-      const allCountries = [...COUNTRIES, 'SE Asia Avg'];
+      const allCountries = ['Vietnam','Myanmar','Laos','Philippines','Thailand','Cambodia','SE Asia Avg','Brunei','Malaysia','Singapore','Indonesia','Timor-Leste'];
       const rows = ['Epoch,Country,Lag-1,Lag-3,Lag-6,Lag-12'];
       EPOCHS.forEach(ep => {
         allCountries.forEach(country => {
