@@ -682,11 +682,11 @@
     function buildMainDS(country) {
       const isSEA = country === 'SE Asia Avg';
       const monthly = isSEA ? seaAvgMonthly : RAW[country];
-      const col = isSEA ? '#ffffff' : COLORS[COUNTRIES.indexOf(country)];
+      const col = isSEA ? '#374151' : COLORS[COUNTRIES.indexOf(country)];
       const ds = [{
         label: country, data: [...monthly],
-        borderColor: col + (isSEA ? '99' : '72'), backgroundColor: 'transparent',
-        borderWidth: 1, pointRadius: 0, tension: 0.2, order: 2
+        borderColor: isSEA ? '#374151' : col + '72', backgroundColor: 'transparent',
+        borderWidth: isSEA ? 1.8 : 1, pointRadius: 0, tension: 0.2, order: 2
       }];
       EPOCHS.forEach((ep, i) => {
         const xs = Array.from({ length: ep.me - ep.ms + 1 }, (_, k) => ep.ms + k);
