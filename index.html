@@ -749,7 +749,7 @@
         const mPerYear = mSlope * 12; // annualize for display
         const st = vstat(mys);
         // Stable = |slope| < 0.02 g/kg/yr (line visually near-horizontal across all countries)
-        const dir = mPerYear > 0.01 ? '↑ Increasing' : mPerYear < -0.01 ? '↓ Decreasing' : '→ Stable';
+        const dir = mPerYear > 0 ? '↑ Increasing' : mPerYear < 0 ? '↓ Decreasing' : '→ Stable';
         const cls = dir === '↑ Increasing' ? 'tup' : dir === '↓ Decreasing' ? 'tdn' : 'tst';
         const vals = acf(mys, 12).slice(1);
         const lagVals = [
