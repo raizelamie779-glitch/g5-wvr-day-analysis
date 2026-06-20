@@ -485,7 +485,10 @@
         <div class="actrl"><label class="clbl">Country: <select id="maCtry"></select></label></div>
       </div>
       <div id="acfCtrlTop" style="display:none">
-        <div class="actrl"><label class="clbl">Country: <select id="acfCtry"></select></label></div>
+        <div class="actrl">
+          <label class="clbl">Country: <select id="acfCtry"></select></label>
+          <button class="cbtn" onclick="downloadACFCSV()" style="border-color:#374151;color:#374151;margin-left:8px">⬇ Download CSV</button>
+        </div>
       </div>
       <div id="uniCtrlTop" style="display:none">
         <div class="actrl"><label class="clbl">Country: <select id="uniCtry"></select></label></div>
@@ -1206,6 +1209,35 @@
       else if (currentMode === 'ma') buildDataTable(val, true);
       else if (currentMode === 'acf') { buildACFCards(val); buildACFTable(val); }
       else if (currentMode === 'uni') { buildUniStats(val); buildDataTable(val, false); }
+    }
+
+    // ════════════════════════════════════════════════════════
+    // ACF CSV DOWNLOAD — all countries × all epochs
+    // ════════════════════════════════════════════════════════
+    function downloadACFCSV() {
+      const allCountries = [...COUNTRIES, 'SE Asia Avg'];
+      const rows = ['Epoch,Country,Lag-1,Lag-3,Lag-6,Lag-12'];
+      EPOCHS.forEach(ep => {
+        allCountries.forEach(country => {
+          const isSEA = country === 'SE Asia Avg';
+          const monthly = isSEA ? seaAvgMonthly : RAW[country];
+          const epData = monthly.slice(ep.ms, ep.me + 1);
+          const vals = acf(epData, 12).slice(1);
+          rows.push([
+            ep.label,
+            country,
+            +vals[0].toFixed(4),
+            +vals[2].toFixed(4),
+            +vals[5].toFixed(4),
+            +vals[11].toFixed(4)
+          ].join(','));
+        });
+      });
+      const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'ACF_by_epoch.csv';
+      a.click(); URL.revokeObjectURL(url);
     }
 
   </script>
