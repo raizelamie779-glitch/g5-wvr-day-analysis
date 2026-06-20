@@ -494,7 +494,10 @@
         </div>
       </div>
       <div id="uniCtrlTop" style="display:none">
-        <div class="actrl"><label class="clbl">Country: <select id="uniCtry"></select></label></div>
+        <div class="actrl">
+          <label class="clbl">Country: <select id="uniCtry"></select></label>
+          <button class="cbtn" onclick="downloadUniCSV()" style="border-color:#374151;color:#374151;margin-left:8px">⬇ Download CSV</button>
+        </div>
       </div>
       <div id="animWrap">
         <div class="card" style="padding:20px">
@@ -1212,6 +1215,30 @@
       else if (currentMode === 'ma') buildDataTable(val, true);
       else if (currentMode === 'acf') { buildACFCards(val); buildACFTable(val); }
       else if (currentMode === 'uni') { buildUniStats(val); buildDataTable(val, false); }
+    }
+
+    // ════════════════════════════════════════════════════════
+    // UNIVARIATE CSV DOWNLOAD — full-series stats per country
+    // ════════════════════════════════════════════════════════
+    function downloadUniCSV() {
+      const allCountries = [...COUNTRIES, 'SE Asia Avg'];
+      const rows = ['Country,Mean,Max,Min,Std Deviation'];
+      allCountries.forEach(country => {
+        const isSEA = country === 'SE Asia Avg';
+        const monthly = isSEA ? seaAvgMonthly : RAW[country];
+        const st = vstat(monthly);
+        rows.push([
+          isSEA ? 'SEA' : country,
+          st.mean.toFixed(4),
+          st.max.toFixed(4),
+          st.min.toFixed(4),
+          st.std.toFixed(4)
+        ].join(','));
+      });
+      const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'Univariate_stats.csv';
+      a.click(); URL.revokeObjectURL(url);
     }
 
     // ════════════════════════════════════════════════════════
