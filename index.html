@@ -6,6 +6,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>WVR Spatio-Temporal Analysis — Southeast Asia</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * {
       box-sizing: border-box;
@@ -14,9 +17,9 @@
     }
 
     body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #f5f7fa;
-      color: #1f2328
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #ffffff;
+      color: #111827
     }
 
     .container {
@@ -26,23 +29,24 @@
     }
 
     header {
-      text-align: center;
-      padding: 18px 0 14px;
-      border-bottom: 1px solid #d0d7de;
+      text-align: left;
+      padding: 22px 0 16px;
+      border-bottom: 1px solid #e5e7eb;
       margin-bottom: 28px
     }
 
     h1 {
-      font-size: 1.75rem;
+      font-size: 1.55rem;
       font-weight: 700;
-      color: #0072BD;
-      -webkit-text-fill-color: #0072BD;
-      margin-bottom: 6px
+      color: #111827;
+      letter-spacing: -.015em;
+      margin-bottom: 4px
     }
 
     .subtitle {
-      color: #57606a;
-      font-size: .88rem
+      color: #6b7280;
+      font-size: .85rem;
+      font-weight: 400
     }
 
     .analysis-section {
@@ -55,30 +59,32 @@
       gap: 10px;
       margin-bottom: 16px;
       padding-bottom: 10px;
-      border-bottom: 1px solid #d0d7de
+      border-bottom: 1px solid #e5e7eb
     }
 
     .section-header h2 {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #0072BD
+      font-size: .95rem;
+      font-weight: 600;
+      color: #111827;
+      letter-spacing: -.01em
     }
 
     .badge {
-      background: #0072BD;
+      background: #374151;
       color: #fff;
-      font-size: .68rem;
-      font-weight: 700;
+      font-size: .65rem;
+      font-weight: 600;
       padding: 2px 8px;
-      border-radius: 10px
+      border-radius: 4px;
+      letter-spacing: .03em
     }
 
     .slabel {
-      color: #57606a;
-      font-size: .72rem;
-      font-weight: 700;
+      color: #6b7280;
+      font-size: .7rem;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: .06em;
+      letter-spacing: .07em;
       margin-bottom: 6px
     }
 
@@ -124,23 +130,23 @@
       align-items: center;
       gap: 6px;
       cursor: pointer;
-      font-size: .83rem;
-      color: #57606a
+      font-size: .81rem;
+      color: #6b7280
     }
 
     .topt input {
       cursor: pointer;
-      accent-color: #0072BD
+      accent-color: #374151
     }
 
     .topt:hover {
-      color: #1f2328
+      color: #111827
     }
 
     .card {
       background: #ffffff;
-      border: 1px solid #d0d7de;
-      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
       padding: 20px;
       margin-bottom: 18px
     }
@@ -173,8 +179,8 @@
       display: flex;
       align-items: center;
       gap: 7px;
-      font-size: .78rem;
-      color: #57606a
+      font-size: .75rem;
+      color: #6b7280
     }
 
     .epline {
@@ -192,38 +198,40 @@
 
     .epc {
       background: #ffffff;
-      border: 1px solid #d0d7de;
-      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
       padding: 14px
     }
 
     .epc h3 {
-      font-size: .8rem;
+      font-size: .78rem;
       font-weight: 700;
       margin-bottom: 10px;
       padding-bottom: 7px;
-      border-bottom: 2px solid
+      border-bottom: 2px solid;
+      letter-spacing: -.005em
     }
 
     .est {
       display: flex;
       justify-content: space-between;
-      font-size: .76rem;
-      color: #57606a;
+      font-size: .74rem;
+      color: #6b7280;
       margin: 4px 0
     }
 
     .est span:last-child {
-      color: #1f2328;
-      font-weight: 600
+      color: #111827;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums
     }
 
     .tup {
-      color: #c0392b
+      color: #dc2626
     }
 
     .tdn {
-      color: #27ae60
+      color: #16a34a
     }
 
     .tst {
@@ -238,15 +246,15 @@
     }
 
     .stbl th {
-      background: #f0f2f5;
-      color: #57606a;
-      font-weight: 700;
+      background: #f9fafb;
+      color: #6b7280;
+      font-weight: 600;
       text-transform: uppercase;
-      font-size: .7rem;
-      letter-spacing: .05em;
+      font-size: .68rem;
+      letter-spacing: .06em;
       padding: 10px 12px;
       text-align: right;
-      border-bottom: 2px solid #d0d7de;
+      border-bottom: 1px solid #e5e7eb;
       white-space: nowrap
     }
 
@@ -256,27 +264,28 @@
 
     .stbl td {
       padding: 8px 12px;
-      border-bottom: 1px solid #f0f2f5;
+      border-bottom: 1px solid #f3f4f6;
       text-align: right;
-      font-family: monospace;
-      font-size: .8rem;
-      color: #1f2328
+      font-family: 'Inter', monospace;
+      font-size: .79rem;
+      color: #111827;
+      font-variant-numeric: tabular-nums
     }
 
     .stbl td:first-child {
       text-align: left;
       font-family: inherit;
-      color: #1f2328
+      color: #111827
     }
 
     .stbl tr:hover td {
-      background: #ffffff
+      background: #f9fafb
     }
 
     .stbl tr.sea td {
-      background: #eef4ff;
-      font-weight: 700;
-      border-top: 2px solid #d0d7de
+      background: #f0f4ff;
+      font-weight: 600;
+      border-top: 1px solid #e5e7eb
     }
 
     .dot {
@@ -298,60 +307,64 @@
     }
 
     .clbl {
-      font-size: .83rem;
-      color: #57606a;
+      font-size: .82rem;
+      color: #6b7280;
       display: flex;
       align-items: center;
-      gap: 8px
+      gap: 8px;
+      font-weight: 500
     }
 
     .clbl select {
-      background: #f0f2f5;
-      color: #1f2328;
-      border: 1px solid #d0d7de;
-      border-radius: 6px;
-      padding: 6px 10px;
-      font-size: .83rem;
+      background: #f9fafb;
+      color: #111827;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      padding: 5px 10px;
+      font-size: .82rem;
+      font-family: 'Inter', sans-serif;
       cursor: pointer
     }
 
     .clbl select:focus {
       outline: none;
-      border-color: #0072BD
+      border-color: #9ca3af
     }
 
     .acfbox {
       margin-top: 14px;
       padding: 12px 16px;
-      background: #f0f2f5;
-      border-radius: 8px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
       font-size: .79rem;
-      color: #57606a;
+      color: #6b7280;
       line-height: 1.7
     }
 
     .acfbox strong {
-      color: #1f2328
+      color: #111827
     }
 
     .dtbl {
       width: 100%;
       border-collapse: collapse;
-      font-size: .78rem;
+      font-size: .77rem;
+      font-variant-numeric: tabular-nums;
     }
     .dtbl th, .dtbl td {
       padding: 6px 10px;
       text-align: right;
-      border-bottom: 1px solid #d0d7de;
+      border-bottom: 1px solid #e5e7eb;
       white-space: nowrap;
     }
     .dtbl th {
-      background: #f6f8fa;
-      color: #57606a;
-      font-weight: 700;
+      background: #f9fafb;
+      color: #6b7280;
+      font-weight: 600;
       text-transform: uppercase;
-      font-size: .68rem;
-      letter-spacing: .05em;
+      font-size: .67rem;
+      letter-spacing: .06em;
       position: sticky;
       top: 0;
       z-index: 1;
@@ -360,29 +373,29 @@
       text-align: left;
     }
     .dtbl td:first-child {
-      font-weight: 700;
-      color: #0072BD;
+      font-weight: 600;
+      color: #111827;
     }
     .dtbl tr:hover td {
-      background: #f6f8fa;
+      background: #f9fafb;
     }
     .dtbl-year td {
-      background: #eef4ff;
-      color: #0072BD;
+      background: #f3f4f6;
+      color: #374151;
       font-weight: 700;
-      font-size: .8rem;
+      font-size: .78rem;
       text-align: left !important;
-      border-top: 2px solid #d0d7de;
-      border-bottom: 1px solid #d0d7de;
+      border-top: 1px solid #e5e7eb;
+      border-bottom: 1px solid #e5e7eb;
     }
     .dtbl-month {
       text-align: left !important;
       padding-left: 24px !important;
-      color: #57606a;
+      color: #6b7280;
       font-weight: 400;
     }
     .dtbl td.ma-null {
-      color: #bbb;
+      color: #d1d5db;
     }
 
     @media(max-width:900px) {
@@ -406,26 +419,27 @@
     }
 
     .vtab {
-      padding: 5px 14px;
-      border-radius: 20px;
-      border: 1.5px solid #d0d7de;
+      padding: 5px 13px;
+      border-radius: 4px;
+      border: 1px solid #e5e7eb;
       background: transparent;
       cursor: pointer;
-      font-size: .8rem;
-      font-weight: 600;
-      color: #57606a;
-      transition: all .2s
+      font-size: .78rem;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      color: #6b7280;
+      transition: all .15s
     }
 
     .vtab.active {
-      background: #0072BD;
-      border-color: #0072BD;
+      background: #111827;
+      border-color: #111827;
       color: #fff
     }
 
     .vtab:hover:not(.active) {
-      border-color: #0072BD;
-      color: #0072BD
+      border-color: #9ca3af;
+      color: #374151
     }
   </style>
 </head>
@@ -648,19 +662,19 @@
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#ffffff', borderColor: '#d0d7de', borderWidth: 1, bodyColor: '#1f2328', titleColor: '#1f2328',
+            backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
             callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(3)}` } }
           }
         },
         scales: {
           x: {
-            grid: { color: '#e8ecf0' },
-            ticks: { color: '#57606a', maxRotation: 45, callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : '' },
-            title: { display: true, text: 'Month', color: '#57606a' }
+            grid: { color: '#f3f4f6' },
+            ticks: { color: '#9ca3af', maxRotation: 45, callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : '' },
+            title: { display: true, text: 'Month', color: '#9ca3af' }
           },
           y: {
-            grid: { color: '#e8ecf0' }, ticks: { color: '#57606a' },
-            title: { display: true, text: 'WVR (g/kg)', color: '#57606a' }
+            grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' },
+            title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' }
           }
         }
       }, plugins: [epochPlug]
@@ -711,8 +725,8 @@
         ];
         const lagRows = lagVals.map(({ label, lag, v }) => {
           const sig = Math.abs(v) > ci;
-          return `<div class="est"><span>${label}</span><span style="color:${sig ? '#c0392b' : '#57606a'}">${v >= 0 ? '+' : ''}${v}</span></div>` +
-            `<div style="font-size:.68rem;color:#6e7681;padding:0 0 5px 0;line-height:1.3">${lagNote(lag, v, sig)}</div>`;
+          return `<div class="est"><span>${label}</span><span style="color:${sig ? '#dc2626' : '#6b7280'}">${v >= 0 ? '+' : ''}${v}</span></div>` +
+            `<div style="font-size:.68rem;color:#9ca3af;padding:0 0 5px 0;line-height:1.3">${lagNote(lag, v, sig)}</div>`;
         }).join('');
         const c = document.createElement('div'); c.className = 'epc';
         c.innerHTML = `<h3 style="color:${ep.color};border-color:${ep.color}">Epoch ${i + 1}: ${ep.label}</h3>
@@ -724,7 +738,7 @@
       <div class="est"><span>Trend</span><span class="${cls}">${dir}</span></div>
       <div style="border-top:1px solid #d0d7de;margin:7px 0"></div>
       ${lagRows}
-      <div class="est" style="font-size:.7rem;color:#6e7681"><span>95% CI</span><span>±${ci}</span></div>`;
+      <div class="est" style="font-size:.68rem;color:#9ca3af"><span>95% CI</span><span>±${ci}</span></div>`;
         panel.appendChild(c);
       });
     }
@@ -813,22 +827,22 @@
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#ffffff', borderColor: '#d0d7de', borderWidth: 1, bodyColor: '#1f2328', titleColor: '#1f2328',
+            backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
             callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(3)}` } }
           }
         },
         scales: {
           x: {
-            grid: { color: '#f0f2f5' },
+            grid: { color: '#f3f4f6' },
             ticks: {
-              color: '#8b949e', maxRotation: 45,
+              color: '#9ca3af', maxRotation: 45,
               callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : ''
             },
-            title: { display: true, text: 'Month', color: '#8b949e' }
+            title: { display: true, text: 'Month', color: '#9ca3af' }
           },
           y: {
-            grid: { color: '#e8ecf0' }, ticks: { color: '#57606a' },
-            title: { display: true, text: 'WVR (g/kg)', color: '#57606a' }
+            grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' },
+            title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' }
           }
         }
       }, plugins: [epochPlug]
