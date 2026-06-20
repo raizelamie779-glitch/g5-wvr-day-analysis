@@ -716,12 +716,7 @@
     [...COUNTRIES, 'SE Asia Avg'].forEach(c => {
       const o = document.createElement('option'); o.value = c; o.textContent = c; mainCtryEl.appendChild(o);
     });
-    mainCtryEl.addEventListener('change', () => {
-      const v = mainCtryEl.value;
-      mainChart.data.datasets = buildMainDS(v); mainChart.update();
-      buildEpCards(v);
-      buildDataTable(v, false);
-    });
+    mainCtryEl.addEventListener('change', () => setCountry(mainCtryEl.value));
 
     // Epoch summary cards — rebuilt whenever country changes
     function buildEpCards(country) {
@@ -868,15 +863,12 @@
       }, plugins: [epochPlug]
     });
 
-    maCtryEl.addEventListener('change', () => {
-      const v = maCtryEl.value;
-      maChart.data.datasets = buildMADS(v); maChart.update();
-      buildEpCards(v);
-      buildDataTable(v, true);
-    });
+    maCtryEl.addEventListener('change', () => setCountry(maCtryEl.value));
 
     // View tab switching
+    let currentMode = 'anim';
     function setTab(mode) {
+      currentMode = mode;
       const $ = id => document.getElementById(id);
       const show = id => $(id).style.display = '';
       const hide = id => $(id).style.display = 'none';
@@ -1008,6 +1000,7 @@
       thead.innerHTML = `<tr>
         <th>Month</th>
         <th>Water Vapor Mixing Ratio (g/kg)</th>
+        <th>Deviation</th>
         <th>Deviation²</th>
         <th>Lag-1 Paired Deviation</th>
         <th>Lag-3 Paired Deviation</th>
@@ -1027,7 +1020,7 @@
         epYears.forEach((year, yi) => {
           const yr = document.createElement('tr');
           yr.className = 'dtbl-year';
-          yr.innerHTML = `<td colspan="7">${year}</td>`;
+          yr.innerHTML = `<td colspan="8">${year}</td>`;
           tbody.appendChild(yr);
           MONTH_LABELS.forEach((month, mi) => {
             const li = yi * 12 + mi; // index within this epoch
@@ -1037,6 +1030,7 @@
             tr.innerHTML =
               `<td class="dtbl-month">${month}</td>` +
               `<td>${epData[li].toFixed(4)}</td>` +
+              `<td>${d.toFixed(4)}</td>` +
               `<td>${(d * d).toFixed(4)}</td>` +
               f4(li >= 1  ? d * epDev[li - 1]  : null) +
               f4(li >= 3  ? d * epDev[li - 3]  : null) +
@@ -1058,13 +1052,20 @@
     seaOptACF.value = 'SE Asia Avg'; seaOptACF.textContent = 'SE Asia Avg';
     acfCtryEl.appendChild(seaOptACF);
 
-    acfCtryEl.addEventListener('change', () => {
-      const v = acfCtryEl.value;
-      document.getElementById('dtblCtry').textContent = v;
-      buildACFCards(v);
-      buildACFTable(v);
-      buildEpCards(v);
-    });
+    acfCtryEl.addEventListener('change', () => setCountry(acfCtryEl.value));
+
+    function setCountry(val) {
+      mainCtryEl.value = val;
+      maCtryEl.value = val;
+      acfCtryEl.value = val;
+      mainChart.data.datasets = buildMainDS(val); mainChart.update();
+      maChart.data.datasets = buildMADS(val); maChart.update();
+      buildEpCards(val);
+      document.getElementById('dtblCtry').textContent = val;
+      if (currentMode === 'trend') buildDataTable(val, false);
+      else if (currentMode === 'ma') buildDataTable(val, true);
+      else if (currentMode === 'acf') { buildACFCards(val); buildACFTable(val); }
+    }
 
   </script>
 </body>
