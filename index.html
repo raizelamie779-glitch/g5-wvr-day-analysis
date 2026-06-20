@@ -797,26 +797,30 @@
         });
         tbl.appendChild(tbody);
       } else {
-        // ── MA view: vertical with WVR + 3-Month MA columns ──
-        const ma = movAvg(monthly, 3);
+        // ── MA view: per-epoch 3-Month MA (resets at each epoch boundary) ──
         const thead = document.createElement('thead');
         thead.innerHTML = '<tr><th>Month</th><th>WVR (g/kg)</th><th>Moving Average (3 month) (g/kg)</th></tr>';
         tbl.appendChild(thead);
         const tbody = document.createElement('tbody');
-        YEARS.forEach((year, yi) => {
-          const yearRow = document.createElement('tr');
-          yearRow.className = 'dtbl-year';
-          yearRow.innerHTML = `<td colspan="3">${year}</td>`;
-          tbody.appendChild(yearRow);
-          MONTH_LABELS.forEach((month, mi) => {
-            const idx = yi * 12 + mi;
-            const maVal = ma[idx];
-            const maNull = maVal === null || maVal === undefined;
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td class="dtbl-month">${month}</td>` +
-              `<td>${monthly[idx].toFixed(3)}</td>` +
-              `<td class="${maNull ? 'ma-null' : ''}">${maNull ? '—' : maVal.toFixed(3)}</td>`;
-            tbody.appendChild(tr);
+        EPOCHS.forEach((ep) => {
+          const epYears = YEARS.slice(ep.start, ep.end + 1);
+          const epData = monthly.slice(ep.ms, ep.me + 1);
+          const epMA = movAvg(epData, 3);
+          epYears.forEach((year, yi) => {
+            const yearRow = document.createElement('tr');
+            yearRow.className = 'dtbl-year';
+            yearRow.innerHTML = `<td colspan="3">${year}</td>`;
+            tbody.appendChild(yearRow);
+            MONTH_LABELS.forEach((month, mi) => {
+              const li = yi * 12 + mi;
+              const maVal = epMA[li];
+              const maNull = maVal === null || maVal === undefined;
+              const tr = document.createElement('tr');
+              tr.innerHTML = `<td class="dtbl-month">${month}</td>` +
+                `<td>${epData[li].toFixed(3)}</td>` +
+                `<td class="${maNull ? 'ma-null' : ''}">${maNull ? '—' : maVal.toFixed(3)}</td>`;
+              tbody.appendChild(tr);
+            });
           });
         });
         tbl.appendChild(tbody);
@@ -930,76 +934,177 @@
     function buildACFCharts(country) {
       const isSEA = country === 'SE Asia Avg';
       const monthly = isSEA ? seaAvgMonthly : RAW[country];
+
       EPOCHS.forEach((ep, i) => {
         const epData = monthly.slice(ep.ms, ep.me + 1);
         const n = epData.length;
-        const lagVals = acf(epData, 12).slice(1); // lags 1..12
-        const ci = 1.96 / Math.sqrt(n);
-        const epColor = ep.color;
+        const lagValsAll = acf(epData, 12).slice(1);
+        const ci = +(1.96 / Math.sqrt(n)).toFixed(4);
+        const sigma = 1 / Math.sqrt(n);
 
-        // Bar colours: key lags use epoch colour, others grey
-        const bgColors = lagVals.map((v, li) => {
-          const lag = li + 1;
-          if (KEY_LAGS.has(lag)) return v >= 0 ? epColor : '#dc2626';
-          return v >= 0 ? epColor + '55' : '#fca5a5';
-        });
-        const borderColors = lagVals.map((v, li) =>
-          KEY_LAGS.has(li + 1) ? (v >= 0 ? epColor : '#b91c1c') : 'transparent'
-        );
+        // Key lags only: 1, 3, 6, 12
+        const KEY_DEFS = [{lag:1,idx:0},{lag:3,idx:2},{lag:6,idx:5},{lag:12,idx:11}];
+        const lagPoints = KEY_DEFS.map(({lag, idx}) => ({
+          lag, value: +lagValsAll[idx].toFixed(4),
+          sig: Math.abs(lagValsAll[idx]) > ci
+        }));
+
+        // Dynamic x-axis range
+        const maxAbsVal = Math.max(...lagPoints.map(p => Math.abs(p.value)));
+        const xExt = Math.min(1.0, Math.max(ci * 3.5, maxAbsVal * 1.15));
+
+        // Bell curve + CI shading plugin (inline, closure-captured vars)
+        const bellPlug = {
+          id: `bell_ep${i}`,
+          beforeDatasetsDraw(chart) {
+            const { ctx, chartArea, scales } = chart;
+            if (!chartArea) return;
+            const xsc = scales.x, ysc = scales.y;
+            const zeroY = ysc.getPixelForValue(0);
+            const ciL = xsc.getPixelForValue(-ci);
+            const ciR = xsc.getPixelForValue(ci);
+            const nPts = 280;
+            const pdf = x => Math.exp(-0.5 * (x / sigma) ** 2) / (sigma * Math.sqrt(2 * Math.PI));
+            const maxPDF = pdf(0);
+            const norm = x => pdf(x) / maxPDF;
+
+            ctx.save();
+
+            // CI region fill
+            ctx.beginPath();
+            ctx.moveTo(ciL, zeroY);
+            for (let k = 0; k <= nPts; k++) {
+              const x = -ci + k * (2 * ci) / nPts;
+              ctx.lineTo(xsc.getPixelForValue(x), ysc.getPixelForValue(norm(x)));
+            }
+            ctx.lineTo(ciR, zeroY);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(139,92,246,0.16)';
+            ctx.fill();
+
+            // Full bell curve outline
+            ctx.beginPath();
+            for (let k = 0; k <= nPts; k++) {
+              const x = xsc.min + k * (xsc.max - xsc.min) / nPts;
+              const px = xsc.getPixelForValue(x);
+              const py = ysc.getPixelForValue(norm(x));
+              k === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+            }
+            ctx.strokeStyle = 'rgba(55,55,55,0.5)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([]);
+            ctx.stroke();
+
+            // Baseline y=0
+            ctx.beginPath();
+            ctx.moveTo(chartArea.left, zeroY);
+            ctx.lineTo(chartArea.right, zeroY);
+            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // CI dashed verticals
+            ctx.setLineDash([5, 4]);
+            ctx.strokeStyle = 'rgba(139,92,246,0.6)';
+            ctx.lineWidth = 1;
+            [ciL, ciR].forEach(px => {
+              ctx.beginPath();
+              ctx.moveTo(px, chartArea.top + 18);
+              ctx.lineTo(px, zeroY + 2);
+              ctx.stroke();
+            });
+            ctx.setLineDash([]);
+
+            // Mean center dashed line
+            const cx0 = xsc.getPixelForValue(0);
+            ctx.setLineDash([3, 3]);
+            ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cx0, chartArea.top + 18);
+            ctx.lineTo(cx0, zeroY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Text labels
+            ctx.font = '8px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#7c3aed';
+            ctx.fillText(`−${ci}`, ciL, chartArea.top + 16);
+            ctx.fillText(`+${ci}`, ciR, chartArea.top + 16);
+            ctx.fillStyle = '#9ca3af';
+            ctx.fillText('Mean (0)', cx0, zeroY + 11);
+            ctx.fillText('95% CI', cx0, chartArea.top + 16);
+
+            ctx.restore();
+          },
+          afterDatasetsDraw(chart) {
+            const { ctx, scales } = chart;
+            const xsc = scales.x, ysc = scales.y;
+            const dotY = ysc.getPixelForValue(-0.09);
+            ctx.save();
+            ctx.font = 'bold 8px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            lagPoints.forEach(p => {
+              const px = xsc.getPixelForValue(p.value);
+              ctx.fillStyle = p.sig ? '#dc2626' : '#16a34a';
+              ctx.fillText(`Lag-${p.lag}`, px, dotY - 12);
+            });
+            ctx.restore();
+          }
+        };
 
         if (acfChartInstances[i]) { acfChartInstances[i].destroy(); acfChartInstances[i] = null; }
         acfChartInstances[i] = new Chart(document.getElementById(`acfChart${i}`).getContext('2d'), {
-          type: 'bar',
+          type: 'scatter',
           data: {
-            labels: ['1','2','3','4','5','6','7','8','9','10','11','12'],
-            datasets: [
-              {
-                label: 'ACF',
-                data: lagVals,
-                backgroundColor: bgColors,
-                borderColor: borderColors,
-                borderWidth: 1.5,
-                borderRadius: 2,
-                barPercentage: 0.65
-              },
-              { type: 'line', data: Array(12).fill(+ci.toFixed(4)), borderColor: 'rgba(220,38,38,0.55)', borderDash: [5,3], borderWidth: 1.2, pointRadius: 0, tension: 0 },
-              { type: 'line', data: Array(12).fill(+(-ci).toFixed(4)), borderColor: 'rgba(220,38,38,0.55)', borderDash: [5,3], borderWidth: 1.2, pointRadius: 0, tension: 0 }
-            ]
+            datasets: [{
+              data: lagPoints.map(p => ({ x: p.value, y: -0.09 })),
+              backgroundColor: lagPoints.map(p => p.sig ? '#dc2626' : '#16a34a'),
+              borderColor: lagPoints.map(p => p.sig ? '#b91c1c' : '#15803d'),
+              borderWidth: 1.5,
+              pointRadius: 7,
+              pointHoverRadius: 9
+            }]
           },
           options: {
-            responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
+            responsive: true, maintainAspectRatio: false, animation: { duration: 200 },
             plugins: {
               legend: { display: false },
               title: {
                 display: true,
                 text: `Epoch ${i + 1}: ${ep.label}`,
-                color: epColor,
+                color: ep.color,
                 font: { size: 11, weight: '700', family: 'Inter, sans-serif' },
-                padding: { top: 4, bottom: 6 }
+                padding: { top: 4, bottom: 4 }
               },
               tooltip: {
                 backgroundColor: '#fff', borderColor: '#e5e7eb', borderWidth: 1,
                 bodyColor: '#111827', titleColor: '#111827',
-                filter: item => item.datasetIndex === 0,
                 callbacks: {
-                  title: items => `Lag ${items[0].label}`,
-                  label: item => ` ACF = ${item.raw.toFixed(4)}`
+                  title: () => '',
+                  label: item => {
+                    const p = lagPoints[item.dataIndex];
+                    return ` Lag-${p.lag}: ${p.value >= 0 ? '+' : ''}${p.value} — ${p.sig ? 'Significant (outside CI)' : 'Not significant (inside CI)'}`;
+                  }
                 }
               }
             },
             scales: {
               x: {
-                grid: { display: false },
-                ticks: { color: '#9ca3af', font: { size: 10 } },
-                title: { display: true, text: 'Lag (months)', color: '#9ca3af', font: { size: 9 } }
+                type: 'linear', min: -xExt, max: xExt,
+                grid: { color: '#f3f4f6' },
+                ticks: { color: '#9ca3af', font: { size: 10 }, callback: v => v.toFixed(2) },
+                title: { display: true, text: 'Autocorrelation Coefficient', color: '#9ca3af', font: { size: 9 } }
               },
               y: {
-                min: -1, max: 1,
-                grid: { color: '#f3f4f6' },
-                ticks: { color: '#9ca3af', font: { size: 10 }, stepSize: 0.5 }
+                min: -0.24, max: 1.06,
+                grid: { display: false },
+                ticks: { display: false }
               }
             }
-          }
+          },
+          plugins: [bellPlug]
         });
       });
     }
@@ -1007,9 +1112,6 @@
     function buildACFTable(country) {
       const isSEA = country === 'SE Asia Avg';
       const monthly = isSEA ? seaAvgMonthly : RAW[country];
-      const n = monthly.length;
-      const mean = monthly.reduce((s, v) => s + v, 0) / n;
-      const dev = monthly.map(v => v - mean);
 
       document.getElementById('dtblCtry').textContent = country;
       const tbl = document.getElementById('acfTable');
@@ -1028,25 +1130,33 @@
       tbl.appendChild(thead);
 
       const tbody = document.createElement('tbody');
-      YEARS.forEach((year, yi) => {
-        const yr = document.createElement('tr');
-        yr.className = 'dtbl-year';
-        yr.innerHTML = `<td colspan="7">${year}</td>`;
-        tbody.appendChild(yr);
-        MONTH_LABELS.forEach((month, mi) => {
-          const t = yi * 12 + mi;
-          const d = dev[t];
-          const f4 = v => v === null ? '<td class="ma-null">—</td>' : `<td>${v.toFixed(4)}</td>`;
-          const tr = document.createElement('tr');
-          tr.innerHTML =
-            `<td class="dtbl-month">${month}</td>` +
-            `<td>${monthly[t].toFixed(4)}</td>` +
-            `<td>${(d * d).toFixed(4)}</td>` +
-            f4(t >= 1  ? d * dev[t - 1]  : null) +
-            f4(t >= 3  ? d * dev[t - 3]  : null) +
-            f4(t >= 6  ? d * dev[t - 6]  : null) +
-            f4(t >= 12 ? d * dev[t - 12] : null);
-          tbody.appendChild(tr);
+      // Per-epoch: each epoch uses its own mean; lag pairs reset at epoch start
+      EPOCHS.forEach((ep) => {
+        const epYears = YEARS.slice(ep.start, ep.end + 1);
+        const epData = monthly.slice(ep.ms, ep.me + 1);
+        const epMean = epData.reduce((s, v) => s + v, 0) / epData.length;
+        const epDev = epData.map(v => v - epMean);
+
+        epYears.forEach((year, yi) => {
+          const yr = document.createElement('tr');
+          yr.className = 'dtbl-year';
+          yr.innerHTML = `<td colspan="7">${year}</td>`;
+          tbody.appendChild(yr);
+          MONTH_LABELS.forEach((month, mi) => {
+            const li = yi * 12 + mi; // index within this epoch
+            const d = epDev[li];
+            const f4 = v => v === null ? '<td class="ma-null">—</td>' : `<td>${v.toFixed(4)}</td>`;
+            const tr = document.createElement('tr');
+            tr.innerHTML =
+              `<td class="dtbl-month">${month}</td>` +
+              `<td>${epData[li].toFixed(4)}</td>` +
+              `<td>${(d * d).toFixed(4)}</td>` +
+              f4(li >= 1  ? d * epDev[li - 1]  : null) +
+              f4(li >= 3  ? d * epDev[li - 3]  : null) +
+              f4(li >= 6  ? d * epDev[li - 6]  : null) +
+              f4(li >= 12 ? d * epDev[li - 12] : null);
+            tbody.appendChild(tr);
+          });
         });
       });
       tbl.appendChild(tbody);
