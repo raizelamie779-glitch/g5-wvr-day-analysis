@@ -334,6 +334,39 @@
       color: #1f2328
     }
 
+    .dtbl {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .78rem;
+    }
+    .dtbl th, .dtbl td {
+      padding: 6px 10px;
+      text-align: right;
+      border-bottom: 1px solid #d0d7de;
+      white-space: nowrap;
+    }
+    .dtbl th {
+      background: #f6f8fa;
+      color: #57606a;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: .68rem;
+      letter-spacing: .05em;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .dtbl th:first-child, .dtbl td:first-child {
+      text-align: left;
+    }
+    .dtbl td:first-child {
+      font-weight: 700;
+      color: #0072BD;
+    }
+    .dtbl tr:hover td {
+      background: #f6f8fa;
+    }
+
     @media(max-width:900px) {
       .epcards {
         grid-template-columns: repeat(2, 1fr)
@@ -434,6 +467,14 @@
       <div class="epcards" id="epcards"></div>
     </section>
 
+    <section>
+      <div class="section-header">
+        <h2>Monthly WVR Data &mdash; <span id="dtblCtry"></span></h2>
+      </div>
+      <div class="card" style="overflow-x:auto;padding:0;border-radius:12px">
+        <table class="dtbl" id="dataTable"></table>
+      </div>
+    </section>
 
   </div>
   <script>
@@ -616,6 +657,7 @@
       const v = mainCtryEl.value;
       mainChart.data.datasets = buildMainDS(v); mainChart.update();
       buildEpCards(v);
+      buildDataTable(v);
     });
 
     // Epoch summary cards — rebuilt whenever country changes
@@ -654,6 +696,30 @@
       });
     }
     buildEpCards(COUNTRIES[0]);
+
+    // ════════════════════════════════════════════════════════
+    // MONTHLY DATA TABLE
+    // ════════════════════════════════════════════════════════
+    const MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    function buildDataTable(country) {
+      const isSEA = country === 'SE Asia Avg';
+      const monthly = isSEA ? seaAvgMonthly : RAW[country];
+      document.getElementById('dtblCtry').textContent = country;
+      const tbl = document.getElementById('dataTable');
+      tbl.innerHTML = '';
+      const thead = document.createElement('thead');
+      thead.innerHTML = '<tr><th>Year</th>' + MONTH_LABELS.map(m => `<th>${m}</th>`).join('') + '</tr>';
+      tbl.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      YEARS.forEach((year, yi) => {
+        const tr = document.createElement('tr');
+        const base = yi * 12;
+        tr.innerHTML = `<td>${year}</td>` + MONTH_LABELS.map((_, mi) => `<td>${monthly[base + mi].toFixed(3)}</td>`).join('');
+        tbody.appendChild(tr);
+      });
+      tbl.appendChild(tbody);
+    }
+    buildDataTable(COUNTRIES[0]);
 
     // ════════════════════════════════════════════════════════
     // MOVING AVERAGE CHART
@@ -711,6 +777,7 @@
       const v = maCtryEl.value;
       maChart.data.datasets = buildMADS(v); maChart.update();
       buildEpCards(v);
+      buildDataTable(v);
     });
 
     // View tab switching
