@@ -797,30 +797,26 @@
         });
         tbl.appendChild(tbody);
       } else {
-        // ── MA view: per-epoch 3-Month MA (resets at each epoch boundary) ──
+        // ── MA view: global 3-Month MA (only first 2 months of full series show —) ──
+        const ma = movAvg(monthly, 3);
         const thead = document.createElement('thead');
         thead.innerHTML = '<tr><th>Month</th><th>WVR (g/kg)</th><th>Moving Average (3 month) (g/kg)</th></tr>';
         tbl.appendChild(thead);
         const tbody = document.createElement('tbody');
-        EPOCHS.forEach((ep) => {
-          const epYears = YEARS.slice(ep.start, ep.end + 1);
-          const epData = monthly.slice(ep.ms, ep.me + 1);
-          const epMA = movAvg(epData, 3);
-          epYears.forEach((year, yi) => {
-            const yearRow = document.createElement('tr');
-            yearRow.className = 'dtbl-year';
-            yearRow.innerHTML = `<td colspan="3">${year}</td>`;
-            tbody.appendChild(yearRow);
-            MONTH_LABELS.forEach((month, mi) => {
-              const li = yi * 12 + mi;
-              const maVal = epMA[li];
-              const maNull = maVal === null || maVal === undefined;
-              const tr = document.createElement('tr');
-              tr.innerHTML = `<td class="dtbl-month">${month}</td>` +
-                `<td>${epData[li].toFixed(3)}</td>` +
-                `<td class="${maNull ? 'ma-null' : ''}">${maNull ? '—' : maVal.toFixed(3)}</td>`;
-              tbody.appendChild(tr);
-            });
+        YEARS.forEach((year, yi) => {
+          const yearRow = document.createElement('tr');
+          yearRow.className = 'dtbl-year';
+          yearRow.innerHTML = `<td colspan="3">${year}</td>`;
+          tbody.appendChild(yearRow);
+          MONTH_LABELS.forEach((month, mi) => {
+            const idx = yi * 12 + mi;
+            const maVal = ma[idx];
+            const maNull = maVal === null || maVal === undefined;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td class="dtbl-month">${month}</td>` +
+              `<td>${monthly[idx].toFixed(3)}</td>` +
+              `<td class="${maNull ? 'ma-null' : ''}">${maNull ? '—' : maVal.toFixed(3)}</td>`;
+            tbody.appendChild(tr);
           });
         });
         tbl.appendChild(tbody);
