@@ -570,12 +570,16 @@
 
   </div>
   <script>
-    window.onerror = function(msg, _src, line) {
+    const _showErr = (msg) => {
+      let c = document.getElementById('_errc');
+      if (!c) { c = document.createElement('div'); c.id = '_errc'; c.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;font-size:11px'; document.body.appendChild(c); }
       const d = document.createElement('div');
-      d.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:8px 12px;background:#dc2626;color:#fff;font-size:12px;z-index:9999;word-break:break-all';
-      d.textContent = '⚠ JS Error: ' + msg + ' (line ' + line + ')';
-      document.body.appendChild(d);
+      d.style.cssText = 'padding:5px 10px;background:#dc2626;color:#fff;word-break:break-all;border-bottom:1px solid rgba(0,0,0,.25)';
+      d.textContent = '⚠ ' + msg;
+      c.appendChild(d);
     };
+    window.onerror = function(msg, _src, line) { _showErr(msg + ' (line ' + line + ')'); };
+    if (typeof Chart === 'undefined') _showErr('Chart.js CDN failed to load — charts will not work');
     // ════════════════════════════════════════════════════════
     // RAW DATA (252 monthly values each: Jan 2005 – Dec 2025)
     // ════════════════════════════════════════════════════════
@@ -747,7 +751,7 @@
           }
         }
       }, plugins: [epochPlug]
-    }); } catch(e) { console.error('mainChart:', e); }
+    }); } catch(e) { _showErr('mainChart: ' + e.message); }
     document.getElementById('mainCard').style.display = 'none';
 
     // Country dropdown for Linear Trend
@@ -904,7 +908,7 @@
           }
         }
       }
-    }); } catch(e) { console.error('maChart:', e); }
+    }); } catch(e) { _showErr('maChart: ' + e.message); }
     document.getElementById('maWrap').style.display = 'none';
     document.getElementById('mainCard').style.display = 'none';
     maCtryEl.addEventListener('change', () => setCountry(maCtryEl.value));
@@ -951,7 +955,7 @@
           }
         }
       }, plugins: [epochPlug]
-    }); } catch(e) { console.error('acfLineChart:', e); }
+    }); } catch(e) { _showErr('acfLineChart: ' + e.message); }
     document.getElementById('acfChartWrap').style.display = 'none';
     document.getElementById('mainCard').style.display = 'none';
 
@@ -997,7 +1001,7 @@
           }
         }
       }
-    }); } catch(e) { console.error('uniChart:', e); }
+    }); } catch(e) { _showErr('uniChart: ' + e.message); }
     document.getElementById('uniWrap').style.display = 'none';
     document.getElementById('mainCard').style.display = 'none';
 
@@ -1236,10 +1240,10 @@
       maCtryEl.value = val;
       acfCtryEl.value = val;
       uniCtryEl.value = val;
-      mainChart.data.datasets = buildMainDS(val); mainChart.update();
-      maChart.data.datasets = buildMADS(val); maChart.update();
-      acfLineChart.data.datasets = buildACFLineDS(val); acfLineChart.update();
-      uniChart.data.datasets = buildUniDS(val); uniChart.update();
+      if (mainChart) { mainChart.data.datasets = buildMainDS(val); mainChart.update(); }
+      if (maChart) { maChart.data.datasets = buildMADS(val); maChart.update(); }
+      if (acfLineChart) { acfLineChart.data.datasets = buildACFLineDS(val); acfLineChart.update(); }
+      if (uniChart) { uniChart.data.datasets = buildUniDS(val); uniChart.update(); }
       buildEpCards(val);
       document.getElementById('dtblCtry').textContent = val;
       if (currentMode === 'trend') buildDataTable(val, false);
