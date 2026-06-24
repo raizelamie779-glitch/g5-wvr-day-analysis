@@ -1003,58 +1003,59 @@
     // View tab switching
     let currentMode = 'anim';
     function setTab(mode) {
-      currentMode = mode;
-      const $ = id => document.getElementById(id);
-      const show = id => $(id).style.display = '';
-      const hide = id => $(id).style.display = 'none';
-      ['tabAnim','tabTrend','tabMA','tabACF','tabUni'].forEach(id => $(id).classList.remove('active'));
-      // Hide all tab-specific elements
-      ['animWrap','mainCard','mainWrap','maWrap','acfChartWrap','uniWrap','acfWrap',
-       'trendCtrl','maCtrlTop','acfCtrlTop','uniCtrlTop',
-       'trendLeg','maLeg','acfChartLeg','uniLeg'].forEach(hide);
-      hide('epcards'); hide('uniStats'); hide('tableSection'); hide('dataTable'); hide('acfTable');
+      try {
+        currentMode = mode;
+        const $ = id => document.getElementById(id);
+        const show = id => { const el = $(id); if (el) el.style.display = ''; };
+        const hide = id => { const el = $(id); if (el) el.style.display = 'none'; };
+        ['tabAnim','tabTrend','tabMA','tabACF','tabUni'].forEach(id => { const el = $(id); if (el) el.classList.remove('active'); });
+        ['animWrap','mainCard','mainWrap','maWrap','acfChartWrap','uniWrap','acfWrap',
+         'trendCtrl','maCtrlTop','acfCtrlTop','uniCtrlTop',
+         'trendLeg','maLeg','acfChartLeg','uniLeg'].forEach(hide);
+        hide('epcards'); hide('uniStats'); hide('tableSection'); hide('dataTable'); hide('acfTable');
 
-      if (mode === 'anim') {
-        show('animWrap');
-        $('tabAnim').classList.add('active');
-      } else if (mode === 'trend') {
-        show('mainCard'); show('mainWrap'); show('trendCtrl'); show('trendLeg');
-        show('epcards'); show('tableSection'); show('dataTable');
-        $('tabTrend').classList.add('active');
-        $('dtblTitle').textContent = 'Monthly WVR Data';
-        $('dtblCtry').textContent = mainCtryEl.value;
-        setTimeout(() => mainChart.resize(), 10);
-        buildDataTable(mainCtryEl.value, false);
-      } else if (mode === 'ma') {
-        show('mainCard'); show('maWrap'); show('maCtrlTop'); show('maLeg');
-        show('tableSection'); show('dataTable');
-        $('tabMA').classList.add('active');
-        $('dtblTitle').textContent = 'Monthly WVR Data';
-        $('dtblCtry').textContent = maCtryEl.value;
-        setTimeout(() => maChart.resize(), 10);
-        buildDataTable(maCtryEl.value, true);
-      } else if (mode === 'acf') {
-        show('mainCard'); show('acfChartWrap'); show('acfChartLeg'); show('acfWrap'); show('acfCtrlTop');
-        show('epcards'); show('tableSection'); show('acfTable');
-        $('tabACF').classList.add('active');
-        $('dtblTitle').textContent = 'ACF Computation Table';
-        const v = document.getElementById('acfCtry').value;
-        $('dtblCtry').textContent = v;
-        setTimeout(() => acfLineChart.resize(), 10);
-        buildACFCards(v);
-        buildACFTable(v);
-        buildEpCards(v);
-      } else if (mode === 'uni') {
-        show('mainCard'); show('uniWrap'); show('uniLeg'); show('uniCtrlTop');
-        show('uniStats'); show('tableSection'); show('dataTable');
-        $('tabUni').classList.add('active');
-        $('dtblTitle').textContent = 'Monthly WVR Data';
-        const v = document.getElementById('uniCtry').value;
-        $('dtblCtry').textContent = v;
-        setTimeout(() => uniChart.resize(), 10);
-        buildUniStats(v);
-        buildDataTable(v, false);
-      }
+        if (mode === 'anim') {
+          show('animWrap');
+          $('tabAnim').classList.add('active');
+        } else if (mode === 'trend') {
+          show('mainCard'); show('mainWrap'); show('trendCtrl'); show('trendLeg');
+          show('epcards'); show('tableSection'); show('dataTable');
+          $('tabTrend').classList.add('active');
+          $('dtblTitle').textContent = 'Monthly WVR Data';
+          $('dtblCtry').textContent = mainCtryEl.value;
+          setTimeout(() => { try { mainChart.resize(); } catch(e) {} }, 10);
+          buildDataTable(mainCtryEl.value, false);
+        } else if (mode === 'ma') {
+          show('mainCard'); show('maWrap'); show('maCtrlTop'); show('maLeg');
+          show('tableSection'); show('dataTable');
+          $('tabMA').classList.add('active');
+          $('dtblTitle').textContent = 'Monthly WVR Data';
+          $('dtblCtry').textContent = maCtryEl.value;
+          setTimeout(() => { try { maChart.resize(); } catch(e) {} }, 10);
+          buildDataTable(maCtryEl.value, true);
+        } else if (mode === 'acf') {
+          show('mainCard'); show('acfChartWrap'); show('acfChartLeg'); show('acfWrap'); show('acfCtrlTop');
+          show('epcards'); show('tableSection'); show('acfTable');
+          $('tabACF').classList.add('active');
+          $('dtblTitle').textContent = 'ACF Computation Table';
+          const v = document.getElementById('acfCtry').value;
+          $('dtblCtry').textContent = v;
+          setTimeout(() => { try { acfLineChart.resize(); } catch(e) {} }, 10);
+          buildACFCards(v);
+          buildACFTable(v);
+          buildEpCards(v);
+        } else if (mode === 'uni') {
+          show('mainCard'); show('uniWrap'); show('uniLeg'); show('uniCtrlTop');
+          show('uniStats'); show('tableSection'); show('dataTable');
+          $('tabUni').classList.add('active');
+          $('dtblTitle').textContent = 'Monthly WVR Data';
+          const v = document.getElementById('uniCtry').value;
+          $('dtblCtry').textContent = v;
+          setTimeout(() => { try { uniChart.resize(); } catch(e) {} }, 10);
+          buildUniStats(v);
+          buildDataTable(v, false);
+        }
+      } catch(e) { console.error('setTab error:', e); }
     }
     document.getElementById('tabAnim').addEventListener('click', () => setTab('anim'));
     document.getElementById('tabTrend').addEventListener('click', () => setTab('trend'));
