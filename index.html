@@ -512,11 +512,11 @@
           <p style="font-size:.78rem;color:#6b7280;margin-top:12px;text-align:center">WVR Spatio-Temporal Analysis &mdash; Southeast Asia &middot; 2005&ndash;2025</p>
         </div>
       </div>
-      <div id="mainCard" class="card" style="display:none">
+      <div id="mainCard" class="card" style="position:fixed;top:-9999px;left:0;width:100%;visibility:hidden;">
         <div id="mainWrap" class="cw h520"><canvas id="mainChart"></canvas></div>
-        <div id="maWrap" class="cw h400" style="display:none"><canvas id="maChart"></canvas></div>
-        <div id="acfChartWrap" class="cw h520" style="display:none"><canvas id="acfLineChart"></canvas></div>
-        <div id="uniWrap" class="cw h400" style="display:none"><canvas id="uniChart"></canvas></div>
+        <div id="maWrap" class="cw h400" style="position:absolute;left:-9999px;visibility:hidden;width:100%;"><canvas id="maChart"></canvas></div>
+        <div id="acfChartWrap" class="cw h520" style="position:absolute;left:-9999px;visibility:hidden;width:100%;"><canvas id="acfLineChart"></canvas></div>
+        <div id="uniWrap" class="cw h400" style="position:absolute;left:-9999px;visibility:hidden;width:100%;"><canvas id="uniChart"></canvas></div>
         <div id="trendLeg" class="epleg">
           <div class="eplegi">
             <div class="epline" style="background:#aab0b7;opacity:.8"></div>Monthly WVR
@@ -1070,9 +1070,16 @@
         const $ = id => document.getElementById(id);
         const show = id => { const el = $(id); if (el) el.style.display = ''; };
         const hide = id => { const el = $(id); if (el) el.style.display = 'none'; };
-        ['tabAnim','tabTrend','tabMA','tabACF','tabUni'].forEach(id => { const el = $(id); if (el) el.classList.remove('active'); });
-        ['animWrap','mainCard','mainWrap','maWrap','acfChartWrap','uniWrap','acfWrap',
-         'trendCtrl','maCtrlTop','acfCtrlTop','uniCtrlTop',
+        // Off-screen helpers: keep canvas wrappers in layout so canvases always have real dimensions
+        const hideCard = () => { const el=$('mainCard'); if(el) el.style.cssText='position:fixed;top:-9999px;left:0;width:100%;visibility:hidden;'; };
+        const showCard = () => { const el=$('mainCard'); if(el) el.style.cssText=''; };
+        const hideCW = id => { const el=$(id); if(el) el.style.cssText='position:absolute;left:-9999px;visibility:hidden;width:100%;'; };
+        const showCW = id => { const el=$(id); if(el) el.style.cssText=''; };
+
+        ['tabAnim','tabTrend','tabMA','tabACF','tabUni'].forEach(id => { const el=$(id); if(el) el.classList.remove('active'); });
+        hide('animWrap'); hideCard();
+        hideCW('mainWrap'); hideCW('maWrap'); hideCW('acfChartWrap'); hideCW('uniWrap');
+        ['acfWrap','trendCtrl','maCtrlTop','acfCtrlTop','uniCtrlTop',
          'trendLeg','maLeg','acfChartLeg','uniLeg'].forEach(hide);
         hide('epcards'); hide('uniStats'); hide('tableSection'); hide('dataTable'); hide('acfTable');
 
@@ -1080,16 +1087,15 @@
           show('animWrap');
           $('tabAnim').classList.add('active');
         } else if (mode === 'trend') {
-          show('mainCard'); show('mainWrap'); show('trendCtrl'); show('trendLeg');
+          showCard(); showCW('mainWrap'); show('trendCtrl'); show('trendLeg');
           show('epcards'); show('tableSection'); show('dataTable');
           $('tabTrend').classList.add('active');
           $('dtblTitle').textContent = 'Monthly WVR Data';
           $('dtblCtry').textContent = mainCtryEl.value;
           buildDataTable(mainCtryEl.value, false);
-          buildDataTable(mainCtryEl.value, false);
           requestAnimationFrame(() => { try { ensureMainChart(mainCtryEl.value); } catch(e) {} });
         } else if (mode === 'ma') {
-          show('mainCard'); show('maWrap'); show('maCtrlTop'); show('maLeg');
+          showCard(); showCW('maWrap'); show('maCtrlTop'); show('maLeg');
           show('tableSection'); show('dataTable');
           $('tabMA').classList.add('active');
           $('dtblTitle').textContent = 'Monthly WVR Data';
@@ -1097,7 +1103,7 @@
           buildDataTable(maCtryEl.value, true);
           requestAnimationFrame(() => { try { ensureMaChart(maCtryEl.value); } catch(e) {} });
         } else if (mode === 'acf') {
-          show('mainCard'); show('acfChartWrap'); show('acfChartLeg'); show('acfWrap'); show('acfCtrlTop');
+          showCard(); showCW('acfChartWrap'); show('acfChartLeg'); show('acfWrap'); show('acfCtrlTop');
           show('epcards'); show('tableSection'); show('acfTable');
           $('tabACF').classList.add('active');
           $('dtblTitle').textContent = 'ACF Computation Table';
@@ -1108,7 +1114,7 @@
           buildEpCards(v);
           requestAnimationFrame(() => { try { ensureAcfLineChart(v); } catch(e) {} });
         } else if (mode === 'uni') {
-          show('mainCard'); show('uniWrap'); show('uniLeg'); show('uniCtrlTop');
+          showCard(); showCW('uniWrap'); show('uniLeg'); show('uniCtrlTop');
           show('uniStats'); show('tableSection'); show('dataTable');
           $('tabUni').classList.add('active');
           $('dtblTitle').textContent = 'Monthly WVR Data';
@@ -1366,49 +1372,8 @@
       a.click(); URL.revokeObjectURL(url);
     }
 
-    // ── Off-screen chart bootstrap ──────────────────────────────────────
-    // Temporarily make mainCard visible but off-screen so every canvas has
-    // real pixel dimensions when Chart.js initialises. This runs synchronously
-    // before the first user interaction, guaranteeing charts are ready on mobile.
-    (function () {
-      var mc = document.getElementById('mainCard');
-      if (!mc) return;
-      // Destroy any 0×0 charts created by the earlier try-catch blocks
-      [['mainChart', function(){ return mainChart; }, function(c){ mainChart=c; }],
-       ['maChart',   function(){ return maChart;   }, function(c){ maChart=c;   }],
-       ['acfLineChart', function(){ return acfLineChart; }, function(c){ acfLineChart=c; }],
-       ['uniChart',  function(){ return uniChart;  }, function(c){ uniChart=c;  }]
-      ].forEach(function(t) {
-        var ch = t[1]();
-        if (ch && ch.canvas && (ch.canvas.width === 0 || ch.canvas.height === 0)) { ch.destroy(); t[2](null); }
-      });
-      if (mainChart && maChart && acfLineChart && uniChart) return; // all good already
-
-      // Show container off-screen (invisible, out of viewport)
-      var prev = mc.getAttribute('style') || '';
-      mc.style.cssText = 'display:block!important;visibility:hidden!important;position:absolute!important;top:-9999px!important;left:0!important;width:100%!important;';
-      var wrapPrev = {};
-      ['mainWrap','maWrap','acfChartWrap','uniWrap'].forEach(function(id) {
-        var el = document.getElementById(id);
-        if (!el) return;
-        wrapPrev[id] = el.style.display;
-        el.style.display = 'block';
-      });
-
-      void mc.getBoundingClientRect(); // force synchronous layout — canvas now has real dimensions
-
-      if (!mainChart)     try { mainChart     = new Chart(document.getElementById('mainChart').getContext('2d'),     { type:'line', data:{labels:MLABELS, datasets:buildMainDS(COUNTRIES[0])},    options:_chartOpts(), plugins:[epochPlug] }); } catch(e) { console.error('mainChart boot',e); }
-      if (!maChart)       try { maChart       = new Chart(document.getElementById('maChart').getContext('2d'),       { type:'line', data:{labels:MLABELS, datasets:buildMADS(COUNTRIES[0])},      options:_chartOpts() }); }                      catch(e) { console.error('maChart boot',e);   }
-      if (!acfLineChart)  try { acfLineChart  = new Chart(document.getElementById('acfLineChart').getContext('2d'),  { type:'line', data:{labels:MLABELS, datasets:buildACFLineDS(COUNTRIES[0])}, options:_chartOpts(), plugins:[epochPlug] }); } catch(e) { console.error('acfChart boot',e);  }
-      if (!uniChart)      try { uniChart      = new Chart(document.getElementById('uniChart').getContext('2d'),      { type:'line', data:{labels:MLABELS, datasets:buildUniDS(COUNTRIES[0])},     options:_chartOpts() }); }                      catch(e) { console.error('uniChart boot',e);  }
-
-      // Restore original hidden state
-      mc.setAttribute('style', prev || 'display:none');
-      ['mainWrap','maWrap','acfChartWrap','uniWrap'].forEach(function(id) {
-        var el = document.getElementById(id);
-        if (el) el.style.display = wrapPrev[id] !== undefined ? wrapPrev[id] : (id === 'mainWrap' ? '' : 'none');
-      });
-    }());
+    // Charts are pre-initialised at page load above (canvas wrappers always have
+    // real dimensions because mainCard uses position:fixed off-screen, never display:none)
 
   </script>
 </body>
