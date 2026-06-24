@@ -1056,11 +1056,12 @@
         buildDataTable(v, false);
       }
     }
-    document.getElementById('tabAnim').addEventListener('click', () => setTab('anim'));
-    document.getElementById('tabTrend').addEventListener('click', () => setTab('trend'));
-    document.getElementById('tabMA').addEventListener('click', () => setTab('ma'));
-    document.getElementById('tabACF').addEventListener('click', () => setTab('acf'));
-    document.getElementById('tabUni').addEventListener('click', () => setTab('uni'));
+    [['tabAnim','anim'],['tabTrend','trend'],['tabMA','ma'],['tabACF','acf'],['tabUni','uni']].forEach(([id,mode]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('touchend', (e) => { e.preventDefault(); setTab(mode); }, { passive: false });
+      el.addEventListener('click', () => setTab(mode));
+    });
 
     // ════════════════════════════════════════════════════════
     // AUTOCORRELATION TAB
