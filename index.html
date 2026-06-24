@@ -1029,25 +1029,37 @@
         y: { grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' }, title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' } }
       }
     }, extra);
+    function _makeChart(el, cfg) {
+      const ctx = el.getContext('2d'); if (!ctx) return null;
+      // Ensure canvas has a non-zero CSS height so Chart.js can read it
+      const wrap = el.parentNode;
+      if (wrap && wrap.getBoundingClientRect().height === 0) el.style.height = (wrap.offsetHeight || 320) + 'px';
+      try { return new Chart(ctx, cfg); } catch(e) { console.error(e); return null; }
+    }
+    function _chartOK(ch) { return ch && ch.canvas && ch.canvas.width > 0 && ch.canvas.height > 0; }
     function ensureMainChart(country) {
+      if (mainChart && !_chartOK(mainChart)) { mainChart.destroy(); mainChart = null; }
       if (mainChart) { mainChart.resize(); mainChart.data.datasets = buildMainDS(country); mainChart.update(); return; }
       const _c = document.getElementById('mainChart'); if (!_c) return;
-      try { mainChart = new Chart(_c.getContext('2d'), { type: 'line', data: { labels: MLABELS, datasets: buildMainDS(country) }, options: _chartOpts(), plugins: [epochPlug] }); } catch(e) { console.error('mainChart lazy:', e); }
+      mainChart = _makeChart(_c, { type: 'line', data: { labels: MLABELS, datasets: buildMainDS(country) }, options: _chartOpts(), plugins: [epochPlug] });
     }
     function ensureMaChart(country) {
+      if (maChart && !_chartOK(maChart)) { maChart.destroy(); maChart = null; }
       if (maChart) { maChart.resize(); maChart.data.datasets = buildMADS(country); maChart.update(); return; }
       const _c = document.getElementById('maChart'); if (!_c) return;
-      try { maChart = new Chart(_c.getContext('2d'), { type: 'line', data: { labels: MLABELS, datasets: buildMADS(country) }, options: _chartOpts() }); } catch(e) { console.error('maChart lazy:', e); }
+      maChart = _makeChart(_c, { type: 'line', data: { labels: MLABELS, datasets: buildMADS(country) }, options: _chartOpts() });
     }
     function ensureAcfLineChart(country) {
+      if (acfLineChart && !_chartOK(acfLineChart)) { acfLineChart.destroy(); acfLineChart = null; }
       if (acfLineChart) { acfLineChart.resize(); acfLineChart.data.datasets = buildACFLineDS(country); acfLineChart.update(); return; }
       const _c = document.getElementById('acfLineChart'); if (!_c) return;
-      try { acfLineChart = new Chart(_c.getContext('2d'), { type: 'line', data: { labels: MLABELS, datasets: buildACFLineDS(country) }, options: _chartOpts(), plugins: [epochPlug] }); } catch(e) { console.error('acfLineChart lazy:', e); }
+      acfLineChart = _makeChart(_c, { type: 'line', data: { labels: MLABELS, datasets: buildACFLineDS(country) }, options: _chartOpts(), plugins: [epochPlug] });
     }
     function ensureUniChart(country) {
+      if (uniChart && !_chartOK(uniChart)) { uniChart.destroy(); uniChart = null; }
       if (uniChart) { uniChart.resize(); uniChart.data.datasets = buildUniDS(country); uniChart.update(); return; }
       const _c = document.getElementById('uniChart'); if (!_c) return;
-      try { uniChart = new Chart(_c.getContext('2d'), { type: 'line', data: { labels: MLABELS, datasets: buildUniDS(country) }, options: _chartOpts() }); } catch(e) { console.error('uniChart lazy:', e); }
+      uniChart = _makeChart(_c, { type: 'line', data: { labels: MLABELS, datasets: buildUniDS(country) }, options: _chartOpts() });
     }
 
     // View tab switching
@@ -1074,8 +1086,9 @@
           $('dtblTitle').textContent = 'Monthly WVR Data';
           $('dtblCtry').textContent = mainCtryEl.value;
           buildDataTable(mainCtryEl.value, false);
-          void $('mainWrap').offsetHeight;
-          requestAnimationFrame(() => { try { ensureMainChart(mainCtryEl.value); } catch(e) {} });
+          $('mainWrap').getBoundingClientRect();
+          const _mc = mainCtryEl.value;
+          setTimeout(() => { try { ensureMainChart(_mc); } catch(e) {} }, 250);
         } else if (mode === 'ma') {
           show('mainCard'); show('maWrap'); show('maCtrlTop'); show('maLeg');
           show('tableSection'); show('dataTable');
@@ -1083,8 +1096,9 @@
           $('dtblTitle').textContent = 'Monthly WVR Data';
           $('dtblCtry').textContent = maCtryEl.value;
           buildDataTable(maCtryEl.value, true);
-          void $('maWrap').offsetHeight;
-          requestAnimationFrame(() => { try { ensureMaChart(maCtryEl.value); } catch(e) {} });
+          $('maWrap').getBoundingClientRect();
+          const _mac = maCtryEl.value;
+          setTimeout(() => { try { ensureMaChart(_mac); } catch(e) {} }, 250);
         } else if (mode === 'acf') {
           show('mainCard'); show('acfChartWrap'); show('acfChartLeg'); show('acfWrap'); show('acfCtrlTop');
           show('epcards'); show('tableSection'); show('acfTable');
@@ -1095,8 +1109,8 @@
           buildACFCards(v);
           buildACFTable(v);
           buildEpCards(v);
-          void $('acfChartWrap').offsetHeight;
-          requestAnimationFrame(() => { try { ensureAcfLineChart(v); } catch(e) {} });
+          $('acfChartWrap').getBoundingClientRect();
+          setTimeout(() => { try { ensureAcfLineChart(v); } catch(e) {} }, 250);
         } else if (mode === 'uni') {
           show('mainCard'); show('uniWrap'); show('uniLeg'); show('uniCtrlTop');
           show('uniStats'); show('tableSection'); show('dataTable');
@@ -1106,8 +1120,8 @@
           $('dtblCtry').textContent = v;
           buildUniStats(v);
           buildDataTable(v, false);
-          void $('uniWrap').offsetHeight;
-          requestAnimationFrame(() => { try { ensureUniChart(v); } catch(e) {} });
+          $('uniWrap').getBoundingClientRect();
+          setTimeout(() => { try { ensureUniChart(v); } catch(e) {} }, 250);
         }
       } catch(e) { console.error('setTab error:', e); }
     }
