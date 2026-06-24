@@ -572,6 +572,9 @@
 
   </div>
   <script>
+    // Cache bust: redirect to versioned URL so any stale cached page auto-refreshes
+    if (!location.search.includes('_v=4')) location.replace(location.pathname + '?_v=4');
+
     // ════════════════════════════════════════════════════════
     // RAW DATA (252 monthly values each: Jan 2005 – Dec 2025)
     // ════════════════════════════════════════════════════════
