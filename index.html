@@ -572,9 +572,6 @@
 
   </div>
   <script>
-    // Cache bust: redirect to versioned URL so any stale cached page auto-refreshes
-    if (!location.search.includes('_v=4')) location.replace(location.pathname + '?_v=4');
-
     // ════════════════════════════════════════════════════════
     // RAW DATA (252 monthly values each: Jan 2005 – Dec 2025)
     // ════════════════════════════════════════════════════════
@@ -719,31 +716,34 @@
       return ds;
     }
 
-    const mainChart = new Chart(document.getElementById('mainChart').getContext('2d'), {
-      type: 'line', data: { labels: MLABELS, datasets: buildMainDS(COUNTRIES[0]) },
-      options: {
-        responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
-            callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(4)}` } }
-          }
-        },
-        scales: {
-          x: {
-            grid: { color: '#f3f4f6' },
-            ticks: { color: '#9ca3af', maxRotation: 45, callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : '' },
-            title: { display: true, text: 'Month', color: '#9ca3af' }
+    let mainChart = null;
+    try {
+      mainChart = new Chart(document.getElementById('mainChart').getContext('2d'), {
+        type: 'line', data: { labels: MLABELS, datasets: buildMainDS(COUNTRIES[0]) },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
+              callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(4)}` } }
+            }
           },
-          y: {
-            grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' },
-            title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' }
+          scales: {
+            x: {
+              grid: { color: '#f3f4f6' },
+              ticks: { color: '#9ca3af', maxRotation: 45, callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : '' },
+              title: { display: true, text: 'Month', color: '#9ca3af' }
+            },
+            y: {
+              grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' },
+              title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' }
+            }
           }
-        }
-      }, plugins: [epochPlug]
-    });
+        }, plugins: [epochPlug]
+      });
+    } catch(e) { console.error('mainChart init error:', e); }
 
     // Country dropdown for Linear Trend
     const mainCtryEl = document.getElementById('mainCtry');
@@ -868,34 +868,37 @@
       ];
     }
 
-    const maChart = new Chart(document.getElementById('maChart').getContext('2d'), {
-      type: 'line', data: { labels: MLABELS, datasets: buildMADS(COUNTRIES[0]) },
-      options: {
-        responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
-            callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(4)}` } }
-          }
-        },
-        scales: {
-          x: {
-            grid: { color: '#f3f4f6' },
-            ticks: {
-              color: '#9ca3af', maxRotation: 45,
-              callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : ''
-            },
-            title: { display: true, text: 'Month', color: '#9ca3af' }
+    let maChart = null;
+    try {
+      maChart = new Chart(document.getElementById('maChart').getContext('2d'), {
+        type: 'line', data: { labels: MLABELS, datasets: buildMADS(COUNTRIES[0]) },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
+              callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(4)}` } }
+            }
           },
-          y: {
-            grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' },
-            title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' }
+          scales: {
+            x: {
+              grid: { color: '#f3f4f6' },
+              ticks: {
+                color: '#9ca3af', maxRotation: 45,
+                callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : ''
+              },
+              title: { display: true, text: 'Month', color: '#9ca3af' }
+            },
+            y: {
+              grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' },
+              title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' }
+            }
           }
         }
-      }
-    });
+      });
+    } catch(e) { console.error('maChart init error:', e); }
 
     maCtryEl.addEventListener('change', () => setCountry(maCtryEl.value));
 
@@ -913,31 +916,34 @@
       }];
     }
 
-    const acfLineChart = new Chart(document.getElementById('acfLineChart').getContext('2d'), {
-      type: 'line', data: { labels: MLABELS, datasets: buildACFLineDS(COUNTRIES[0]) },
-      options: {
-        responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
-            callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(4)}` } }
-          }
-        },
-        scales: {
-          x: {
-            grid: { color: '#f3f4f6' },
-            ticks: { color: '#9ca3af', maxRotation: 45, callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : '' },
-            title: { display: true, text: 'Month', color: '#9ca3af' }
+    let acfLineChart = null;
+    try {
+      acfLineChart = new Chart(document.getElementById('acfLineChart').getContext('2d'), {
+        type: 'line', data: { labels: MLABELS, datasets: buildACFLineDS(COUNTRIES[0]) },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
+              callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(4)}` } }
+            }
           },
-          y: {
-            grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' },
-            title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' }
+          scales: {
+            x: {
+              grid: { color: '#f3f4f6' },
+              ticks: { color: '#9ca3af', maxRotation: 45, callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : '' },
+              title: { display: true, text: 'Month', color: '#9ca3af' }
+            },
+            y: {
+              grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' },
+              title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' }
+            }
           }
-        }
-      }, plugins: [epochPlug]
-    });
+        }, plugins: [epochPlug]
+      });
+    } catch(e) { console.error('acfLineChart init error:', e); }
 
     // ════════════════════════════════════════════════════════
     // UNIVARIATE ANALYSIS CHART + STATS
@@ -953,31 +959,34 @@
       }];
     }
 
-    const uniChart = new Chart(document.getElementById('uniChart').getContext('2d'), {
-      type: 'line', data: { labels: MLABELS, datasets: buildUniDS(COUNTRIES[0]) },
-      options: {
-        responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
-            callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(4)}` } }
-          }
-        },
-        scales: {
-          x: {
-            grid: { color: '#f3f4f6' },
-            ticks: { color: '#9ca3af', maxRotation: 45, callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : '' },
-            title: { display: true, text: 'Month', color: '#9ca3af' }
+    let uniChart = null;
+    try {
+      uniChart = new Chart(document.getElementById('uniChart').getContext('2d'), {
+        type: 'line', data: { labels: MLABELS, datasets: buildUniDS(COUNTRIES[0]) },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
+              callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(4)}` } }
+            }
           },
-          y: {
-            grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' },
-            title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' }
+          scales: {
+            x: {
+              grid: { color: '#f3f4f6' },
+              ticks: { color: '#9ca3af', maxRotation: 45, callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : '' },
+              title: { display: true, text: 'Month', color: '#9ca3af' }
+            },
+            y: {
+              grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' },
+              title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' }
+            }
           }
         }
-      }
-    });
+      });
+    } catch(e) { console.error('uniChart init error:', e); }
 
     function buildUniStats(country) {
       const isSEA = country === 'SE Asia Avg';
@@ -1060,11 +1069,12 @@
         }
       } catch(e) { console.error('setTab error:', e); }
     }
-    document.getElementById('tabAnim').addEventListener('click', () => setTab('anim'));
-    document.getElementById('tabTrend').addEventListener('click', () => setTab('trend'));
-    document.getElementById('tabMA').addEventListener('click', () => setTab('ma'));
-    document.getElementById('tabACF').addEventListener('click', () => setTab('acf'));
-    document.getElementById('tabUni').addEventListener('click', () => setTab('uni'));
+    [['tabAnim','anim'],['tabTrend','trend'],['tabMA','ma'],['tabACF','acf'],['tabUni','uni']].forEach(([id, mode]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('click', () => setTab(mode));
+      el.addEventListener('touchend', (e) => { e.preventDefault(); setTab(mode); }, { passive: false });
+    });
 
     // ════════════════════════════════════════════════════════
     // AUTOCORRELATION TAB
@@ -1214,10 +1224,10 @@
       maCtryEl.value = val;
       acfCtryEl.value = val;
       uniCtryEl.value = val;
-      mainChart.data.datasets = buildMainDS(val); mainChart.update();
-      maChart.data.datasets = buildMADS(val); maChart.update();
-      acfLineChart.data.datasets = buildACFLineDS(val); acfLineChart.update();
-      uniChart.data.datasets = buildUniDS(val); uniChart.update();
+      if (mainChart) { mainChart.data.datasets = buildMainDS(val); mainChart.update(); }
+      if (maChart) { maChart.data.datasets = buildMADS(val); maChart.update(); }
+      if (acfLineChart) { acfLineChart.data.datasets = buildACFLineDS(val); acfLineChart.update(); }
+      if (uniChart) { uniChart.data.datasets = buildUniDS(val); uniChart.update(); }
       buildEpCards(val);
       document.getElementById('dtblCtry').textContent = val;
       if (currentMode === 'trend') buildDataTable(val, false);
