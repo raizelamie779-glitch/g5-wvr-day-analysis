@@ -1021,7 +1021,7 @@
         $('tabTrend').classList.add('active');
         $('dtblTitle').textContent = 'Monthly WVR Data';
         $('dtblCtry').textContent = mainCtryEl.value;
-        setTimeout(() => mainChart.resize(), 200);
+        setTimeout(() => { mainChart.resize(); mainChart.update('none'); }, 200);
         buildDataTable(mainCtryEl.value, false);
       } else if (mode === 'ma') {
         show('mainCard'); show('maWrap'); show('maCtrlTop'); show('maLeg');
@@ -1029,7 +1029,7 @@
         $('tabMA').classList.add('active');
         $('dtblTitle').textContent = 'Monthly WVR Data';
         $('dtblCtry').textContent = maCtryEl.value;
-        setTimeout(() => maChart.resize(), 200);
+        setTimeout(() => { maChart.resize(); maChart.update('none'); }, 200);
         buildDataTable(maCtryEl.value, true);
       } else if (mode === 'acf') {
         show('mainCard'); show('acfChartWrap'); show('acfChartLeg'); show('acfWrap'); show('acfCtrlTop');
@@ -1038,7 +1038,7 @@
         $('dtblTitle').textContent = 'ACF Computation Table';
         const v = document.getElementById('acfCtry').value;
         $('dtblCtry').textContent = v;
-        setTimeout(() => acfLineChart.resize(), 200);
+        setTimeout(() => { acfLineChart.resize(); acfLineChart.update('none'); }, 200);
         buildACFCards(v);
         buildACFTable(v);
         buildEpCards(v);
@@ -1049,7 +1049,7 @@
         $('dtblTitle').textContent = 'Monthly WVR Data';
         const v = document.getElementById('uniCtry').value;
         $('dtblCtry').textContent = v;
-        setTimeout(() => uniChart.resize(), 200);
+        setTimeout(() => { uniChart.resize(); uniChart.update('none'); }, 200);
         buildUniStats(v);
         buildDataTable(v, false);
       }
@@ -1057,7 +1057,7 @@
     [['tabAnim','anim'],['tabTrend','trend'],['tabMA','ma'],['tabACF','acf'],['tabUni','uni']].forEach(([id,mode]) => {
       const el = document.getElementById(id);
       if (!el) return;
-      el.addEventListener('touchend', (e) => { e.preventDefault(); setTab(mode); }, { passive: false });
+      el.addEventListener('touchend', () => setTab(mode));
       el.addEventListener('click', () => setTab(mode));
     });
 
