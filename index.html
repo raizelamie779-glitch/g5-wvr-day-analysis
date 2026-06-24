@@ -570,6 +570,12 @@
 
   </div>
   <script>
+    window.onerror = function(msg, _src, line) {
+      const d = document.createElement('div');
+      d.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:8px 12px;background:#dc2626;color:#fff;font-size:12px;z-index:9999;word-break:break-all';
+      d.textContent = '⚠ JS Error: ' + msg + ' (line ' + line + ')';
+      document.body.appendChild(d);
+    };
     // ════════════════════════════════════════════════════════
     // RAW DATA (252 monthly values each: Jan 2005 – Dec 2025)
     // ════════════════════════════════════════════════════════
@@ -716,7 +722,8 @@
 
     document.getElementById('mainCard').style.display = '';
     void document.getElementById('mainWrap').offsetHeight;
-    const mainChart = new Chart(document.getElementById('mainChart').getContext('2d'), {
+    let mainChart = null;
+    try { mainChart = new Chart(document.getElementById('mainChart').getContext('2d'), {
       type: 'line', data: { labels: MLABELS, datasets: buildMainDS(COUNTRIES[0]) },
       options: {
         responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
@@ -740,7 +747,7 @@
           }
         }
       }, plugins: [epochPlug]
-    });
+    }); } catch(e) { console.error('mainChart:', e); }
     document.getElementById('mainCard').style.display = 'none';
 
     // Country dropdown for Linear Trend
@@ -869,7 +876,8 @@
     document.getElementById('mainCard').style.display = '';
     document.getElementById('maWrap').style.display = '';
     void document.getElementById('maWrap').offsetHeight;
-    const maChart = new Chart(document.getElementById('maChart').getContext('2d'), {
+    let maChart = null;
+    try { maChart = new Chart(document.getElementById('maChart').getContext('2d'), {
       type: 'line', data: { labels: MLABELS, datasets: buildMADS(COUNTRIES[0]) },
       options: {
         responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
@@ -896,8 +904,7 @@
           }
         }
       }
-    });
-
+    }); } catch(e) { console.error('maChart:', e); }
     document.getElementById('maWrap').style.display = 'none';
     document.getElementById('mainCard').style.display = 'none';
     maCtryEl.addEventListener('change', () => setCountry(maCtryEl.value));
@@ -919,7 +926,8 @@
     document.getElementById('mainCard').style.display = '';
     document.getElementById('acfChartWrap').style.display = '';
     void document.getElementById('acfChartWrap').offsetHeight;
-    const acfLineChart = new Chart(document.getElementById('acfLineChart').getContext('2d'), {
+    let acfLineChart = null;
+    try { acfLineChart = new Chart(document.getElementById('acfLineChart').getContext('2d'), {
       type: 'line', data: { labels: MLABELS, datasets: buildACFLineDS(COUNTRIES[0]) },
       options: {
         responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
@@ -943,7 +951,7 @@
           }
         }
       }, plugins: [epochPlug]
-    });
+    }); } catch(e) { console.error('acfLineChart:', e); }
     document.getElementById('acfChartWrap').style.display = 'none';
     document.getElementById('mainCard').style.display = 'none';
 
@@ -964,7 +972,8 @@
     document.getElementById('mainCard').style.display = '';
     document.getElementById('uniWrap').style.display = '';
     void document.getElementById('uniWrap').offsetHeight;
-    const uniChart = new Chart(document.getElementById('uniChart').getContext('2d'), {
+    let uniChart = null;
+    try { uniChart = new Chart(document.getElementById('uniChart').getContext('2d'), {
       type: 'line', data: { labels: MLABELS, datasets: buildUniDS(COUNTRIES[0]) },
       options: {
         responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
@@ -988,8 +997,7 @@
           }
         }
       }
-    });
-
+    }); } catch(e) { console.error('uniChart:', e); }
     document.getElementById('uniWrap').style.display = 'none';
     document.getElementById('mainCard').style.display = 'none';
 
@@ -1040,7 +1048,7 @@
         $('tabTrend').classList.add('active');
         $('dtblTitle').textContent = 'Monthly WVR Data';
         $('dtblCtry').textContent = mainCtryEl.value;
-        setTimeout(() => { mainChart.resize(); mainChart.update('none'); }, 200);
+        if (mainChart) setTimeout(() => { mainChart.resize(); mainChart.update('none'); }, 200);
         buildDataTable(mainCtryEl.value, false);
       } else if (mode === 'ma') {
         show('mainCard'); show('maWrap'); show('maCtrlTop'); show('maLeg');
@@ -1048,7 +1056,7 @@
         $('tabMA').classList.add('active');
         $('dtblTitle').textContent = 'Monthly WVR Data';
         $('dtblCtry').textContent = maCtryEl.value;
-        setTimeout(() => { maChart.resize(); maChart.update('none'); }, 200);
+        if (maChart) setTimeout(() => { maChart.resize(); maChart.update('none'); }, 200);
         buildDataTable(maCtryEl.value, true);
       } else if (mode === 'acf') {
         show('mainCard'); show('acfChartWrap'); show('acfChartLeg'); show('acfWrap'); show('acfCtrlTop');
@@ -1057,7 +1065,7 @@
         $('dtblTitle').textContent = 'ACF Computation Table';
         const v = document.getElementById('acfCtry').value;
         $('dtblCtry').textContent = v;
-        setTimeout(() => { acfLineChart.resize(); acfLineChart.update('none'); }, 200);
+        if (acfLineChart) setTimeout(() => { acfLineChart.resize(); acfLineChart.update('none'); }, 200);
         buildACFCards(v);
         buildACFTable(v);
         buildEpCards(v);
@@ -1068,7 +1076,7 @@
         $('dtblTitle').textContent = 'Monthly WVR Data';
         const v = document.getElementById('uniCtry').value;
         $('dtblCtry').textContent = v;
-        setTimeout(() => { uniChart.resize(); uniChart.update('none'); }, 200);
+        if (uniChart) setTimeout(() => { uniChart.resize(); uniChart.update('none'); }, 200);
         buildUniStats(v);
         buildDataTable(v, false);
       }
