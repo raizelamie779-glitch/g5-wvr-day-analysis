@@ -714,6 +714,8 @@
       return ds;
     }
 
+    document.getElementById('mainCard').style.display = '';
+    void document.getElementById('mainWrap').offsetHeight;
     const mainChart = new Chart(document.getElementById('mainChart').getContext('2d'), {
       type: 'line', data: { labels: MLABELS, datasets: buildMainDS(COUNTRIES[0]) },
       options: {
@@ -739,6 +741,7 @@
         }
       }, plugins: [epochPlug]
     });
+    document.getElementById('mainCard').style.display = 'none';
 
     // Country dropdown for Linear Trend
     const mainCtryEl = document.getElementById('mainCtry');
@@ -863,6 +866,9 @@
       ];
     }
 
+    document.getElementById('mainCard').style.display = '';
+    document.getElementById('maWrap').style.display = '';
+    void document.getElementById('maWrap').offsetHeight;
     const maChart = new Chart(document.getElementById('maChart').getContext('2d'), {
       type: 'line', data: { labels: MLABELS, datasets: buildMADS(COUNTRIES[0]) },
       options: {
@@ -892,6 +898,8 @@
       }
     });
 
+    document.getElementById('maWrap').style.display = 'none';
+    document.getElementById('mainCard').style.display = 'none';
     maCtryEl.addEventListener('change', () => setCountry(maCtryEl.value));
 
     // ════════════════════════════════════════════════════════
@@ -908,6 +916,9 @@
       }];
     }
 
+    document.getElementById('mainCard').style.display = '';
+    document.getElementById('acfChartWrap').style.display = '';
+    void document.getElementById('acfChartWrap').offsetHeight;
     const acfLineChart = new Chart(document.getElementById('acfLineChart').getContext('2d'), {
       type: 'line', data: { labels: MLABELS, datasets: buildACFLineDS(COUNTRIES[0]) },
       options: {
@@ -933,6 +944,8 @@
         }
       }, plugins: [epochPlug]
     });
+    document.getElementById('acfChartWrap').style.display = 'none';
+    document.getElementById('mainCard').style.display = 'none';
 
     // ════════════════════════════════════════════════════════
     // UNIVARIATE ANALYSIS CHART + STATS
@@ -948,6 +961,9 @@
       }];
     }
 
+    document.getElementById('mainCard').style.display = '';
+    document.getElementById('uniWrap').style.display = '';
+    void document.getElementById('uniWrap').offsetHeight;
     const uniChart = new Chart(document.getElementById('uniChart').getContext('2d'), {
       type: 'line', data: { labels: MLABELS, datasets: buildUniDS(COUNTRIES[0]) },
       options: {
@@ -973,6 +989,9 @@
         }
       }
     });
+
+    document.getElementById('uniWrap').style.display = 'none';
+    document.getElementById('mainCard').style.display = 'none';
 
     function buildUniStats(country) {
       const isSEA = country === 'SE Asia Avg';
