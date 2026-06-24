@@ -22,9 +22,7 @@
       color: #111827
     }
 
-    canvas {
-      touch-action: pan-y
-    }
+
 
     .container {
       max-width: 1420px;
@@ -1023,7 +1021,7 @@
         $('tabTrend').classList.add('active');
         $('dtblTitle').textContent = 'Monthly WVR Data';
         $('dtblCtry').textContent = mainCtryEl.value;
-        setTimeout(() => mainChart.resize(), 10);
+        setTimeout(() => mainChart.resize(), 200);
         buildDataTable(mainCtryEl.value, false);
       } else if (mode === 'ma') {
         show('mainCard'); show('maWrap'); show('maCtrlTop'); show('maLeg');
@@ -1031,7 +1029,7 @@
         $('tabMA').classList.add('active');
         $('dtblTitle').textContent = 'Monthly WVR Data';
         $('dtblCtry').textContent = maCtryEl.value;
-        setTimeout(() => maChart.resize(), 10);
+        setTimeout(() => maChart.resize(), 200);
         buildDataTable(maCtryEl.value, true);
       } else if (mode === 'acf') {
         show('mainCard'); show('acfChartWrap'); show('acfChartLeg'); show('acfWrap'); show('acfCtrlTop');
@@ -1040,7 +1038,7 @@
         $('dtblTitle').textContent = 'ACF Computation Table';
         const v = document.getElementById('acfCtry').value;
         $('dtblCtry').textContent = v;
-        setTimeout(() => acfLineChart.resize(), 10);
+        setTimeout(() => acfLineChart.resize(), 200);
         buildACFCards(v);
         buildACFTable(v);
         buildEpCards(v);
@@ -1051,7 +1049,7 @@
         $('dtblTitle').textContent = 'Monthly WVR Data';
         const v = document.getElementById('uniCtry').value;
         $('dtblCtry').textContent = v;
-        setTimeout(() => uniChart.resize(), 10);
+        setTimeout(() => uniChart.resize(), 200);
         buildUniStats(v);
         buildDataTable(v, false);
       }
