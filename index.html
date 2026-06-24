@@ -1035,7 +1035,7 @@
           $('tabTrend').classList.add('active');
           $('dtblTitle').textContent = 'Monthly WVR Data';
           $('dtblCtry').textContent = mainCtryEl.value;
-          setTimeout(() => { try { mainChart.resize(); } catch(e) {} }, 10);
+          requestAnimationFrame(() => requestAnimationFrame(() => { try { if (mainChart) { mainChart.resize(); mainChart.update('none'); } } catch(e) {} }));
           buildDataTable(mainCtryEl.value, false);
         } else if (mode === 'ma') {
           show('mainCard'); show('maWrap'); show('maCtrlTop'); show('maLeg');
@@ -1043,7 +1043,7 @@
           $('tabMA').classList.add('active');
           $('dtblTitle').textContent = 'Monthly WVR Data';
           $('dtblCtry').textContent = maCtryEl.value;
-          setTimeout(() => { try { maChart.resize(); } catch(e) {} }, 10);
+          requestAnimationFrame(() => requestAnimationFrame(() => { try { if (maChart) { maChart.resize(); maChart.update('none'); } } catch(e) {} }));
           buildDataTable(maCtryEl.value, true);
         } else if (mode === 'acf') {
           show('mainCard'); show('acfChartWrap'); show('acfChartLeg'); show('acfWrap'); show('acfCtrlTop');
@@ -1052,7 +1052,7 @@
           $('dtblTitle').textContent = 'ACF Computation Table';
           const v = document.getElementById('acfCtry').value;
           $('dtblCtry').textContent = v;
-          setTimeout(() => { try { acfLineChart.resize(); } catch(e) {} }, 10);
+          requestAnimationFrame(() => requestAnimationFrame(() => { try { if (acfLineChart) { acfLineChart.resize(); acfLineChart.update('none'); } } catch(e) {} }));
           buildACFCards(v);
           buildACFTable(v);
           buildEpCards(v);
@@ -1063,7 +1063,7 @@
           $('dtblTitle').textContent = 'Monthly WVR Data';
           const v = document.getElementById('uniCtry').value;
           $('dtblCtry').textContent = v;
-          setTimeout(() => { try { uniChart.resize(); } catch(e) {} }, 10);
+          requestAnimationFrame(() => requestAnimationFrame(() => { try { if (uniChart) { uniChart.resize(); uniChart.update('none'); } } catch(e) {} }));
           buildUniStats(v);
           buildDataTable(v, false);
         }
