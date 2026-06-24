@@ -19,8 +19,7 @@
     body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
       background: #ffffff;
-      color: #111827;
-      overflow-x: hidden
+      color: #111827
     }
 
     canvas {
@@ -720,7 +719,7 @@
     const mainChart = new Chart(document.getElementById('mainChart').getContext('2d'), {
       type: 'line', data: { labels: MLABELS, datasets: buildMainDS(COUNTRIES[0]) },
       options: {
-        responsive: true, maintainAspectRatio: false, animation: { duration: 300 }, events: ['mousemove','mouseout','click','touchstart'],
+        responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
         interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { display: false },
@@ -869,7 +868,7 @@
     const maChart = new Chart(document.getElementById('maChart').getContext('2d'), {
       type: 'line', data: { labels: MLABELS, datasets: buildMADS(COUNTRIES[0]) },
       options: {
-        responsive: true, maintainAspectRatio: false, animation: { duration: 300 }, events: ['mousemove','mouseout','click','touchstart'],
+        responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
         interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { display: false },
@@ -914,7 +913,7 @@
     const acfLineChart = new Chart(document.getElementById('acfLineChart').getContext('2d'), {
       type: 'line', data: { labels: MLABELS, datasets: buildACFLineDS(COUNTRIES[0]) },
       options: {
-        responsive: true, maintainAspectRatio: false, animation: { duration: 300 }, events: ['mousemove','mouseout','click','touchstart'],
+        responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
         interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { display: false },
@@ -954,7 +953,7 @@
     const uniChart = new Chart(document.getElementById('uniChart').getContext('2d'), {
       type: 'line', data: { labels: MLABELS, datasets: buildUniDS(COUNTRIES[0]) },
       options: {
-        responsive: true, maintainAspectRatio: false, animation: { duration: 300 }, events: ['mousemove','mouseout','click','touchstart'],
+        responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
         interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { display: false },
