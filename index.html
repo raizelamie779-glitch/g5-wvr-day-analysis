@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>WVR Spatio-Temporal Analysis — Southeast Asia · SBEG3703</title>
+  <title>WVR Spatio-Temporal Analysis — Southeast Asia</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -716,34 +716,31 @@
       return ds;
     }
 
-    let mainChart = null;
-    try {
-      mainChart = new Chart(document.getElementById('mainChart').getContext('2d'), {
-        type: 'line', data: { labels: MLABELS, datasets: buildMainDS(COUNTRIES[0]) },
-        options: {
-          responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
-          interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
-              callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(4)}` } }
-            }
-          },
-          scales: {
-            x: {
-              grid: { color: '#f3f4f6' },
-              ticks: { color: '#9ca3af', maxRotation: 45, callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : '' },
-              title: { display: true, text: 'Month', color: '#9ca3af' }
-            },
-            y: {
-              grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' },
-              title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' }
-            }
+    const mainChart = new Chart(document.getElementById('mainChart').getContext('2d'), {
+      type: 'line', data: { labels: MLABELS, datasets: buildMainDS(COUNTRIES[0]) },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
+            callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(4)}` } }
           }
-        }, plugins: [epochPlug]
-      });
-    } catch(e) { console.error('mainChart init error:', e); }
+        },
+        scales: {
+          x: {
+            grid: { color: '#f3f4f6' },
+            ticks: { color: '#9ca3af', maxRotation: 45, callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : '' },
+            title: { display: true, text: 'Month', color: '#9ca3af' }
+          },
+          y: {
+            grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' },
+            title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' }
+          }
+        }
+      }, plugins: [epochPlug]
+    });
 
     // Country dropdown for Linear Trend
     const mainCtryEl = document.getElementById('mainCtry');
@@ -868,37 +865,34 @@
       ];
     }
 
-    let maChart = null;
-    try {
-      maChart = new Chart(document.getElementById('maChart').getContext('2d'), {
-        type: 'line', data: { labels: MLABELS, datasets: buildMADS(COUNTRIES[0]) },
-        options: {
-          responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
-          interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
-              callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(4)}` } }
-            }
-          },
-          scales: {
-            x: {
-              grid: { color: '#f3f4f6' },
-              ticks: {
-                color: '#9ca3af', maxRotation: 45,
-                callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : ''
-              },
-              title: { display: true, text: 'Month', color: '#9ca3af' }
+    const maChart = new Chart(document.getElementById('maChart').getContext('2d'), {
+      type: 'line', data: { labels: MLABELS, datasets: buildMADS(COUNTRIES[0]) },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
+            callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(4)}` } }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: '#f3f4f6' },
+            ticks: {
+              color: '#9ca3af', maxRotation: 45,
+              callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : ''
             },
-            y: {
-              grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' },
-              title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' }
-            }
+            title: { display: true, text: 'Month', color: '#9ca3af' }
+          },
+          y: {
+            grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' },
+            title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' }
           }
         }
-      });
-    } catch(e) { console.error('maChart init error:', e); }
+      }
+    });
 
     maCtryEl.addEventListener('change', () => setCountry(maCtryEl.value));
 
@@ -916,34 +910,31 @@
       }];
     }
 
-    let acfLineChart = null;
-    try {
-      acfLineChart = new Chart(document.getElementById('acfLineChart').getContext('2d'), {
-        type: 'line', data: { labels: MLABELS, datasets: buildACFLineDS(COUNTRIES[0]) },
-        options: {
-          responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
-          interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
-              callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(4)}` } }
-            }
-          },
-          scales: {
-            x: {
-              grid: { color: '#f3f4f6' },
-              ticks: { color: '#9ca3af', maxRotation: 45, callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : '' },
-              title: { display: true, text: 'Month', color: '#9ca3af' }
-            },
-            y: {
-              grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' },
-              title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' }
-            }
+    const acfLineChart = new Chart(document.getElementById('acfLineChart').getContext('2d'), {
+      type: 'line', data: { labels: MLABELS, datasets: buildACFLineDS(COUNTRIES[0]) },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
+            callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(4)}` } }
           }
-        }, plugins: [epochPlug]
-      });
-    } catch(e) { console.error('acfLineChart init error:', e); }
+        },
+        scales: {
+          x: {
+            grid: { color: '#f3f4f6' },
+            ticks: { color: '#9ca3af', maxRotation: 45, callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : '' },
+            title: { display: true, text: 'Month', color: '#9ca3af' }
+          },
+          y: {
+            grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' },
+            title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' }
+          }
+        }
+      }, plugins: [epochPlug]
+    });
 
     // ════════════════════════════════════════════════════════
     // UNIVARIATE ANALYSIS CHART + STATS
@@ -959,34 +950,31 @@
       }];
     }
 
-    let uniChart = null;
-    try {
-      uniChart = new Chart(document.getElementById('uniChart').getContext('2d'), {
-        type: 'line', data: { labels: MLABELS, datasets: buildUniDS(COUNTRIES[0]) },
-        options: {
-          responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
-          interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
-              callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(4)}` } }
-            }
+    const uniChart = new Chart(document.getElementById('uniChart').getContext('2d'), {
+      type: 'line', data: { labels: MLABELS, datasets: buildUniDS(COUNTRIES[0]) },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, bodyColor: '#111827', titleColor: '#111827',
+            callbacks: { label(c) { if (c.raw === null) return null; return ` ${c.dataset.label}: ${Number(c.raw).toFixed(4)}` } }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: '#f3f4f6' },
+            ticks: { color: '#9ca3af', maxRotation: 45, callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : '' },
+            title: { display: true, text: 'Month', color: '#9ca3af' }
           },
-          scales: {
-            x: {
-              grid: { color: '#f3f4f6' },
-              ticks: { color: '#9ca3af', maxRotation: 45, callback: (_, idx) => idx % 12 === 0 ? MLABELS[idx].slice(0, 4) : '' },
-              title: { display: true, text: 'Month', color: '#9ca3af' }
-            },
-            y: {
-              grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' },
-              title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' }
-            }
+          y: {
+            grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af' },
+            title: { display: true, text: 'WVR (g/kg)', color: '#9ca3af' }
           }
         }
-      });
-    } catch(e) { console.error('uniChart init error:', e); }
+      }
+    });
 
     function buildUniStats(country) {
       const isSEA = country === 'SE Asia Avg';
@@ -1015,67 +1003,64 @@
     // View tab switching
     let currentMode = 'anim';
     function setTab(mode) {
-      try {
-        currentMode = mode;
-        const $ = id => document.getElementById(id);
-        const show = id => { const el = $(id); if (el) el.style.display = ''; };
-        const hide = id => { const el = $(id); if (el) el.style.display = 'none'; };
+      currentMode = mode;
+      const $ = id => document.getElementById(id);
+      const show = id => $(id).style.display = '';
+      const hide = id => $(id).style.display = 'none';
+      ['tabAnim','tabTrend','tabMA','tabACF','tabUni'].forEach(id => $(id).classList.remove('active'));
+      // Hide all tab-specific elements
+      ['animWrap','mainCard','mainWrap','maWrap','acfChartWrap','uniWrap','acfWrap',
+       'trendCtrl','maCtrlTop','acfCtrlTop','uniCtrlTop',
+       'trendLeg','maLeg','acfChartLeg','uniLeg'].forEach(hide);
+      hide('epcards'); hide('uniStats'); hide('tableSection'); hide('dataTable'); hide('acfTable');
 
-        ['tabAnim','tabTrend','tabMA','tabACF','tabUni'].forEach(id => { const el=$(id); if(el) el.classList.remove('active'); });
-        ['animWrap','mainCard','mainWrap','maWrap','acfChartWrap','uniWrap','acfWrap',
-         'trendCtrl','maCtrlTop','acfCtrlTop','uniCtrlTop',
-         'trendLeg','maLeg','acfChartLeg','uniLeg'].forEach(hide);
-        hide('epcards'); hide('uniStats'); hide('tableSection'); hide('dataTable'); hide('acfTable');
-
-        if (mode === 'anim') {
-          show('animWrap');
-          $('tabAnim').classList.add('active');
-        } else if (mode === 'trend') {
-          show('mainCard'); show('mainWrap'); show('trendCtrl'); show('trendLeg');
-          show('epcards'); show('tableSection'); show('dataTable');
-          $('tabTrend').classList.add('active');
-          $('dtblTitle').textContent = 'Monthly WVR Data';
-          $('dtblCtry').textContent = mainCtryEl.value;
-          buildDataTable(mainCtryEl.value, false);
-          setTimeout(() => { try { if (mainChart) { mainChart.data.datasets = buildMainDS(mainCtryEl.value); mainChart.resize(); mainChart.update(); } } catch(e) {} }, 50);
-        } else if (mode === 'ma') {
-          show('mainCard'); show('maWrap'); show('maCtrlTop'); show('maLeg');
-          show('tableSection'); show('dataTable');
-          $('tabMA').classList.add('active');
-          $('dtblTitle').textContent = 'Monthly WVR Data';
-          $('dtblCtry').textContent = maCtryEl.value;
-          buildDataTable(maCtryEl.value, true);
-          setTimeout(() => { try { if (maChart) { maChart.data.datasets = buildMADS(maCtryEl.value); maChart.resize(); maChart.update(); } } catch(e) {} }, 50);
-        } else if (mode === 'acf') {
-          show('mainCard'); show('acfChartWrap'); show('acfChartLeg'); show('acfWrap'); show('acfCtrlTop');
-          show('epcards'); show('tableSection'); show('acfTable');
-          $('tabACF').classList.add('active');
-          $('dtblTitle').textContent = 'ACF Computation Table';
-          const v = document.getElementById('acfCtry').value;
-          $('dtblCtry').textContent = v;
-          buildACFCards(v);
-          buildACFTable(v);
-          buildEpCards(v);
-          setTimeout(() => { try { if (acfLineChart) { acfLineChart.data.datasets = buildACFLineDS(v); acfLineChart.resize(); acfLineChart.update(); } } catch(e) {} }, 50);
-        } else if (mode === 'uni') {
-          show('mainCard'); show('uniWrap'); show('uniLeg'); show('uniCtrlTop');
-          show('uniStats'); show('tableSection'); show('dataTable');
-          $('tabUni').classList.add('active');
-          $('dtblTitle').textContent = 'Monthly WVR Data';
-          const v = document.getElementById('uniCtry').value;
-          $('dtblCtry').textContent = v;
-          buildUniStats(v);
-          buildDataTable(v, false);
-          setTimeout(() => { try { if (uniChart) { uniChart.data.datasets = buildUniDS(v); uniChart.resize(); uniChart.update(); } } catch(e) {} }, 50);
-        }
-      } catch(e) { console.error('setTab error:', e); }
+      if (mode === 'anim') {
+        show('animWrap');
+        $('tabAnim').classList.add('active');
+      } else if (mode === 'trend') {
+        show('mainCard'); show('mainWrap'); show('trendCtrl'); show('trendLeg');
+        show('epcards'); show('tableSection'); show('dataTable');
+        $('tabTrend').classList.add('active');
+        $('dtblTitle').textContent = 'Monthly WVR Data';
+        $('dtblCtry').textContent = mainCtryEl.value;
+        setTimeout(() => mainChart.resize(), 10);
+        buildDataTable(mainCtryEl.value, false);
+      } else if (mode === 'ma') {
+        show('mainCard'); show('maWrap'); show('maCtrlTop'); show('maLeg');
+        show('tableSection'); show('dataTable');
+        $('tabMA').classList.add('active');
+        $('dtblTitle').textContent = 'Monthly WVR Data';
+        $('dtblCtry').textContent = maCtryEl.value;
+        setTimeout(() => maChart.resize(), 10);
+        buildDataTable(maCtryEl.value, true);
+      } else if (mode === 'acf') {
+        show('mainCard'); show('acfChartWrap'); show('acfChartLeg'); show('acfWrap'); show('acfCtrlTop');
+        show('epcards'); show('tableSection'); show('acfTable');
+        $('tabACF').classList.add('active');
+        $('dtblTitle').textContent = 'ACF Computation Table';
+        const v = document.getElementById('acfCtry').value;
+        $('dtblCtry').textContent = v;
+        setTimeout(() => acfLineChart.resize(), 10);
+        buildACFCards(v);
+        buildACFTable(v);
+        buildEpCards(v);
+      } else if (mode === 'uni') {
+        show('mainCard'); show('uniWrap'); show('uniLeg'); show('uniCtrlTop');
+        show('uniStats'); show('tableSection'); show('dataTable');
+        $('tabUni').classList.add('active');
+        $('dtblTitle').textContent = 'Monthly WVR Data';
+        const v = document.getElementById('uniCtry').value;
+        $('dtblCtry').textContent = v;
+        setTimeout(() => uniChart.resize(), 10);
+        buildUniStats(v);
+        buildDataTable(v, false);
+      }
     }
-    [['tabAnim','anim'],['tabTrend','trend'],['tabMA','ma'],['tabACF','acf'],['tabUni','uni']].forEach(([id, mode]) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.addEventListener('click', () => setTab(mode));
-      el.addEventListener('touchend', (e) => { e.preventDefault(); setTab(mode); }, { passive: false });
-    });
+    document.getElementById('tabAnim').addEventListener('click', () => setTab('anim'));
+    document.getElementById('tabTrend').addEventListener('click', () => setTab('trend'));
+    document.getElementById('tabMA').addEventListener('click', () => setTab('ma'));
+    document.getElementById('tabACF').addEventListener('click', () => setTab('acf'));
+    document.getElementById('tabUni').addEventListener('click', () => setTab('uni'));
 
     // ════════════════════════════════════════════════════════
     // AUTOCORRELATION TAB
@@ -1225,10 +1210,10 @@
       maCtryEl.value = val;
       acfCtryEl.value = val;
       uniCtryEl.value = val;
-      if (mainChart) { mainChart.data.datasets = buildMainDS(val); mainChart.update(); }
-      if (maChart) { maChart.data.datasets = buildMADS(val); maChart.update(); }
-      if (acfLineChart) { acfLineChart.data.datasets = buildACFLineDS(val); acfLineChart.update(); }
-      if (uniChart) { uniChart.data.datasets = buildUniDS(val); uniChart.update(); }
+      mainChart.data.datasets = buildMainDS(val); mainChart.update();
+      maChart.data.datasets = buildMADS(val); maChart.update();
+      acfLineChart.data.datasets = buildACFLineDS(val); acfLineChart.update();
+      uniChart.data.datasets = buildUniDS(val); uniChart.update();
       buildEpCards(val);
       document.getElementById('dtblCtry').textContent = val;
       if (currentMode === 'trend') buildDataTable(val, false);
@@ -1315,9 +1300,6 @@
       a.href = url; a.download = 'ACF_by_epoch.csv';
       a.click(); URL.revokeObjectURL(url);
     }
-
-    // Charts are pre-initialised at page load above (canvas wrappers always have
-    // real dimensions because mainCard uses position:fixed off-screen, never display:none)
 
   </script>
 </body>
