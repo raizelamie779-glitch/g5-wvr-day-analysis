@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>WVR Spatio-Temporal Analysis — Southeast Asia</title>
   <script src="chart.min.js"></script>
+  <script src="xlsx.mini.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1261,7 +1262,7 @@
       a.click();
     }
     function downloadTrendChartPNG() { dlPNG('mainChart',   'WVR_LinearTrend_'    + document.getElementById('mainCtry').value.replace(/ /g,'_')); }
-    function downloadMAChartPNG()    { dlPNG('maChart',     'WVR_MovingAverage_'   + document.getElementById('maCtry').value.replace(/ /g,'_')); }
+    function downloadMAChartPNG()    { dlPNG('maChart',     'WVR_MovingAverage_'    + document.getElementById('maCtry').value.replace(/ /g,'_')); }
     function downloadACFChartPNG()   { dlPNG('acfLineChart','WVR_Autocorrelation_' + document.getElementById('acfCtry').value.replace(/ /g,'_')); }
     function downloadUniChartPNG()   { dlPNG('uniChart',    'WVR_Univariate_'      + document.getElementById('uniCtry').value.replace(/ /g,'_')); }
 
@@ -1347,43 +1348,51 @@
     }
 
     // ════════════════════════════════════════════════════════
-    // MOVING AVERAGE CSV — monthly WVR + 3-month MA
+    // MOVING AVERAGE XLSX — one sheet per country
     // ════════════════════════════════════════════════════════
     function downloadMACSV() {
-      const country = document.getElementById('maCtry').value;
-      const isSEA = country === 'SE Asia Avg';
-      const monthly = isSEA ? seaAvgMonthly : RAW[country];
-      const ma = movAvg(monthly, 3);
-      const rows = [
-        `# MOVING AVERAGE (3-MONTH) ANALYSIS — ${country}`,
-        '# Southeast Asia · 2005–2025 · SBEG3703',
-        '#',
-        '# COMPUTATION METHODOLOGY:',
-        '#   Trailing 3-Month Moving Average:',
-        '#   MA(t) = [ X(t−2) + X(t−1) + X(t) ] / 3',
-        '#   where X(t) = WVR observation at month t',
-        '#   Jan 2005 and Feb 2005 are blank — insufficient preceding observations',
-        '#   MA smooths short-term fluctuations to reveal the underlying trend',
-        '#',
-        'Month,WVR (g/kg),3-Month MA (g/kg)'
-      ];
+      const wb = XLSX.utils.book_new();
       const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      YEARS.forEach((year, yi) => {
-        MON.forEach((mon, mi) => {
-          const idx = yi * 12 + mi;
-          const maVal = ma[idx];
-          rows.push([
-            `${year}-${mon}`,
-            monthly[idx].toFixed(4),
-            (maVal === null || maVal === undefined) ? '' : maVal.toFixed(4)
-          ].join(','));
+      const allCountries = [...COUNTRIES, 'SE Asia Avg'];
+
+      allCountries.forEach(country => {
+        const isSEA = country === 'SE Asia Avg';
+        const monthly = isSEA ? seaAvgMonthly : RAW[country];
+        const ma = movAvg(monthly, 3);
+
+        const wsData = [
+          ['MOVING AVERAGE (3-MONTH) ANALYSIS — Water Vapour Mixing Ratio (WVR)'],
+          ['Southeast Asia  ·  2005–2025  ·  SBEG3703'],
+          [''],
+          ['COMPUTATION METHODOLOGY'],
+          ['Method: Trailing 3-Month Moving Average'],
+          ['Formula: MA(t) = [ X(t−2) + X(t−1) + X(t) ] / 3'],
+          ['X(t) = WVR observation at month index t'],
+          ['Jan 2005 and Feb 2005 are blank — insufficient preceding observations'],
+          ['MA smooths short-term fluctuations to highlight the underlying seasonal trend'],
+          [''],
+          ['Month', 'WVR (g/kg)', '3-Month MA (g/kg)']
+        ];
+
+        YEARS.forEach((year, yi) => {
+          MON.forEach((mon, mi) => {
+            const idx = yi * 12 + mi;
+            const maVal = ma[idx];
+            wsData.push([
+              `${year}-${mon}`,
+              +monthly[idx].toFixed(4),
+              (maVal === null || maVal === undefined) ? '' : +maVal.toFixed(4)
+            ]);
+          });
         });
+
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        ws['!cols'] = [{ wch: 12 }, { wch: 14 }, { wch: 20 }];
+        const name = isSEA ? 'SE Asia Avg' : country.substring(0, 31);
+        XLSX.utils.book_append_sheet(wb, ws, name);
       });
-      const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `WVR_MovingAverage_${country.replace(/ /g,'_')}.csv`;
-      a.click(); URL.revokeObjectURL(url);
+
+      XLSX.writeFile(wb, 'WVR_MovingAverage_AllCountries.xlsx');
     }
 
     // ════════════════════════════════════════════════════════
