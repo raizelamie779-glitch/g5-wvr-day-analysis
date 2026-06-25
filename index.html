@@ -1505,8 +1505,8 @@
             const d2 = d * d;
             sumD2 += d2;
             const lagCols = LAGS.map((k, li) => {
-              if (i + k < n) {
-                const prod = d * ds[i + k];
+              if (i - k >= 0) {
+                const prod = d * ds[i - k];
                 sumLag[li] += prod;
                 return +prod.toFixed(6);
               }
