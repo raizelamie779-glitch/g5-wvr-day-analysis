@@ -1382,44 +1382,60 @@
 
         const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-        // Chart data in cols I(8), J(9), K(10): header row 0, data rows 1-252
+        // Chart data: I(8)=Month, J(9)=WVR, K-N(10-13)=Fitted per epoch
+        // Each epoch column has values ONLY for its own months (blank elsewhere = gap)
         const EC = XLSX.utils.encode_cell;
-        ws[EC({r:0,c:8})]  = {v:'Month',t:'s'};
-        ws[EC({r:0,c:9})]  = {v:'WVR (g/kg)',t:'s'};
-        ws[EC({r:0,c:10})] = {v:'Fitted ŷ (g/kg)',t:'s'};
-        epParams.forEach(({ ep, b, a }) => {
+        ws[EC({r:0,c:8})]  = {v:'Month',                   t:'s'};
+        ws[EC({r:0,c:9})]  = {v:'WVR (g/kg)',               t:'s'};
+        ws[EC({r:0,c:10})] = {v:'Fitted Ep1 (2005-2009)',   t:'s'};
+        ws[EC({r:0,c:11})] = {v:'Fitted Ep2 (2010-2014)',   t:'s'};
+        ws[EC({r:0,c:12})] = {v:'Fitted Ep3 (2015-2019)',   t:'s'};
+        ws[EC({r:0,c:13})] = {v:'Fitted Ep4 (2020-2025)',   t:'s'};
+        // All 252 months: Month + WVR (full range)
+        for (let g = 0; g < 252; g++) {
+          const r = g + 1;
+          ws[EC({r,c:8})] = {v:`${2005+Math.floor(g/12)}-${MON[g%12]}`, t:'s'};
+          ws[EC({r,c:9})] = {v:+monthly[g].toFixed(4), t:'n'};
+        }
+        // Epoch-specific fitted: only within each epoch (nulls elsewhere = gap)
+        epParams.forEach(({ ep, b, a }, ei) => {
+          const c = 10 + ei; // K=10, L=11, M=12, N=13
           for (let g = ep.ms; g <= ep.me; g++) {
             const fitted = a + b * (g - ep.ms + 1);
-            const r = g + 1; // data rows start at ws row 1 (g=0 → r=1)
-            ws[EC({r, c:8})]  = {v:`${2005+Math.floor(g/12)}-${MON[g%12]}`, t:'s'};
-            ws[EC({r, c:9})]  = {v:+monthly[g].toFixed(4), t:'n'};
-            ws[EC({r, c:10})] = {v:+fitted.toFixed(4), t:'n'};
+            ws[EC({r: g + 1, c})] = {v:+fitted.toFixed(4), t:'n'};
           }
         });
         const rng = XLSX.utils.decode_range(ws['!ref']);
-        rng.e.c = Math.max(rng.e.c, 10);
+        rng.e.c = Math.max(rng.e.c, 13);
         rng.e.r = Math.max(rng.e.r, 252);
         ws['!ref'] = XLSX.utils.encode_range(rng);
 
         ws['!cols'] = [
           {wch:14},{wch:6},{wch:12},{wch:10},{wch:14},{wch:14},{wch:18},
-          {wch:2},                  // H gap
-          {wch:12},{wch:12},{wch:18} // I J K chart data
+          {wch:2},                                               // H gap
+          {wch:12},{wch:12},{wch:16},{wch:16},{wch:16},{wch:16}  // I J K L M N
         ];
         const name = isSEA ? 'SE Asia Avg' : country.substring(0, 31);
         XLSX.utils.book_append_sheet(wb, ws, name);
 
-        // Chart: categories $I$2:$I$253, WVR $J$2:$J$253, Fitted $K$2:$K$253
-        // Positioned at col M(12) to col W(22), row 0 to row 33
+        // Chart: 5 series — WVR (blue) + 4 epoch fitted (each epoch colour, each disconnected)
+        // Epoch series have null cells outside their range => plotted as gaps => disconnected
+        // Positioned at col P(15) to col AC(28), row 0 to row 38
+        const yMin = Math.floor(Math.min(...monthly) - 0.5);
+        const yMax = Math.ceil(Math.max(...monthly) + 0.5);
         chartDefs.push({
           sheetIdx: si + 1, name,
-          title: `WVR Linear Trend — ${name}`,
+          title: `WVR Linear Trend -- ${name}`,
           cat: '$I$2:$I$253',
+          yMin, yMax,
           series: [
-            {name:'WVR (g/kg)',      nc:'$J$1', val:'$J$2:$J$253', color:'4472C4', w:16000},
-            {name:'Fitted ŷ',  nc:'$K$1', val:'$K$2:$K$253', color:'ED7D31', w:22000}
+            {name:'WVR (g/kg)',               nc:'$J$1', val:'$J$2:$J$253', color:'4472C4', w:14000},
+            {name:'Fitted Ep1 (2005-2009)',   nc:'$K$1', val:'$K$2:$K$253', color:'F0B429', w:24000},
+            {name:'Fitted Ep2 (2010-2014)',   nc:'$L$1', val:'$L$2:$L$253', color:'4ADE80', w:24000},
+            {name:'Fitted Ep3 (2015-2019)',   nc:'$M$1', val:'$M$2:$M$253', color:'60A5FA', w:24000},
+            {name:'Fitted Ep4 (2020-2025)',   nc:'$N$1', val:'$N$2:$N$253', color:'F87171', w:24000},
           ],
-          anchor: [12, 0, 22, 33], skip: 12
+          anchor: [15, 0, 27, 38], skip: 12
         });
       });
 
@@ -1431,16 +1447,18 @@
     // ════════════════════════════════════════════════════════
     function _xlRef(n) { return /[^A-Za-z0-9_]/.test(n) ? `'${n.replace(/'/g,"''")}'` : n; }
 
-    function _chartXML(title, sRef, catRange, series, skip) {
+    function _chartXML(title, sRef, catRange, series, skip, yMin, yMax) {
       const sers = series.map((s, i) => `<c:ser>
         <c:idx val="${i}"/><c:order val="${i}"/>
         <c:tx><c:strRef><c:f>${sRef}!${s.nc}</c:f><c:strCache><c:ptCount val="1"/><c:pt idx="0"><c:v>${s.name}</c:v></c:pt></c:strCache></c:strRef></c:tx>
-        <c:spPr><a:ln w="${s.w||19050}"><a:solidFill><a:srgbClr val="${s.color}"/></a:solidFill></a:ln></c:spPr>
+        <c:spPr><a:ln w="${s.w||19050}"><a:solidFill><a:srgbClr val="${s.color}"/></a:solidFill>${s.dash?`<a:prstDash val="${s.dash}"/>`:''}${s.dash?'':''}</a:ln></c:spPr>
         <c:marker><c:symbol val="none"/></c:marker>
         <c:cat><c:strRef><c:f>${sRef}!${catRange}</c:f></c:strRef></c:cat>
         <c:val><c:numRef><c:f>${sRef}!${s.val}</c:f></c:numRef></c:val>
         <c:smooth val="0"/>
       </c:ser>`).join('');
+      const yScaleExtra = (yMin !== undefined && yMax !== undefined)
+        ? `<c:min val="${yMin}"/><c:max val="${yMax}"/>` : '';
       return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
 <c:chart>
@@ -1458,7 +1476,7 @@
     <c:tickLblSkip val="${skip}"/><c:tickMarkSkip val="${skip}"/>
   </c:catAx>
   <c:valAx>
-    <c:axId val="2002"/><c:scaling><c:orientation val="minMax"/></c:scaling>
+    <c:axId val="2002"/><c:scaling><c:orientation val="minMax"/>${yScaleExtra}</c:scaling>
     <c:delete val="0"/><c:axPos val="l"/>
     <c:numFmt formatCode="0.000" sourceLinked="0"/>
     <c:tickLblPos val="nextTo"/><c:crossAx val="2001"/>
@@ -1492,7 +1510,7 @@
       const ctLines = [];
       for (const d of defs) {
         const n = d.sheetIdx;
-        zip.file(`xl/charts/chart${n}.xml`,              _chartXML(d.title || d.name, _xlRef(d.name), d.cat, d.series, d.skip || 12));
+        zip.file(`xl/charts/chart${n}.xml`,              _chartXML(d.title || d.name, _xlRef(d.name), d.cat, d.series, d.skip || 12, d.yMin, d.yMax));
         zip.file(`xl/drawings/drawing${n}.xml`,          _drawXML(n, ...d.anchor));
         zip.file(`xl/drawings/_rels/drawing${n}.xml.rels`, _dRels(n));
         zip.file(`xl/worksheets/_rels/sheet${n}.xml.rels`, _wsRels(n));
@@ -1549,7 +1567,7 @@
             wsData.push([
               `${year}-${mon}`,
               +monthly[idx].toFixed(4),
-              (maVal === null || maVal === undefined) ? '' : +maVal.toFixed(4)
+              (maVal === null || maVal === undefined) ? null : +maVal.toFixed(4)
             ]);
           });
         });
@@ -1560,12 +1578,18 @@
         const name = isSEA ? 'SE Asia Avg' : country.substring(0, 31);
         XLSX.utils.book_append_sheet(wb, ws, name);
 
+        // y-axis bounds from actual data range (no 0-baseline)
+        const yMin = Math.floor(Math.min(...monthly) - 0.5);
+        const yMax = Math.ceil(Math.max(...monthly) + 0.5);
+
         // Chart: categories $A$13:$A$264, WVR $B$13:$B$264, MA $C$13:$C$264
+        // MA rows 13-14 (Jan/Feb 2005) are null → gap; line starts at Mar 2005
         // Positioned below data: col A(0) row 266 to col K(10) row 298
         chartDefs.push({
           sheetIdx: si + 1, name,
           title: `WVR — 3-Month Moving Average (${name})`,
           cat: '$A$13:$A$264',
+          yMin, yMax,
           series: [
             {name:'WVR (g/kg)',         nc:'$B$12', val:'$B$13:$B$264', color:'4472C4', w:16000},
             {name:'3-Month MA (g/kg)',  nc:'$C$12', val:'$C$13:$C$264', color:'ED7D31', w:25000}
