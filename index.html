@@ -485,21 +485,28 @@
         <div class="actrl">
           <label class="clbl">Country: <select id="mainCtry"></select></label>
           <button class="cbtn" onclick="downloadTrendCSV()" style="border-color:#374151;color:#374151;margin-left:8px">⬇ Download CSV</button>
+          <button class="cbtn" onclick="downloadTrendChartPNG()" style="border-color:#374151;color:#374151;margin-left:4px">⬇ Chart PNG</button>
         </div>
       </div>
       <div id="maCtrlTop" style="display:none">
-        <div class="actrl"><label class="clbl">Country: <select id="maCtry"></select></label></div>
+        <div class="actrl">
+          <label class="clbl">Country: <select id="maCtry"></select></label>
+          <button class="cbtn" onclick="downloadMACSV()" style="border-color:#374151;color:#374151;margin-left:8px">⬇ Download CSV</button>
+          <button class="cbtn" onclick="downloadMAChartPNG()" style="border-color:#374151;color:#374151;margin-left:4px">⬇ Chart PNG</button>
+        </div>
       </div>
       <div id="acfCtrlTop" style="display:none">
         <div class="actrl">
           <label class="clbl">Country: <select id="acfCtry"></select></label>
           <button class="cbtn" onclick="downloadACFCSV()" style="border-color:#374151;color:#374151;margin-left:8px">⬇ Download CSV</button>
+          <button class="cbtn" onclick="downloadACFChartPNG()" style="border-color:#374151;color:#374151;margin-left:4px">⬇ Chart PNG</button>
         </div>
       </div>
       <div id="uniCtrlTop" style="display:none">
         <div class="actrl">
           <label class="clbl">Country: <select id="uniCtry"></select></label>
           <button class="cbtn" onclick="downloadUniCSV()" style="border-color:#374151;color:#374151;margin-left:8px">⬇ Download CSV</button>
+          <button class="cbtn" onclick="downloadUniChartPNG()" style="border-color:#374151;color:#374151;margin-left:4px">⬇ Chart PNG</button>
         </div>
       </div>
       <div id="animWrap">
@@ -1243,81 +1250,177 @@
     }
 
     // ════════════════════════════════════════════════════════
-    // UNIVARIATE CSV DOWNLOAD — full-series stats per country
+    // CHART PNG DOWNLOAD HELPERS
+    // ════════════════════════════════════════════════════════
+    function dlPNG(canvasId, name) {
+      const c = document.getElementById(canvasId);
+      if (!c) return;
+      const a = document.createElement('a');
+      a.download = name + '.png';
+      a.href = c.toDataURL('image/png');
+      a.click();
+    }
+    function downloadTrendChartPNG() { dlPNG('mainChart',   'WVR_LinearTrend_'    + document.getElementById('mainCtry').value.replace(/ /g,'_')); }
+    function downloadMAChartPNG()    { dlPNG('maChart',     'WVR_MovingAverage_'   + document.getElementById('maCtry').value.replace(/ /g,'_')); }
+    function downloadACFChartPNG()   { dlPNG('acfLineChart','WVR_Autocorrelation_' + document.getElementById('acfCtry').value.replace(/ /g,'_')); }
+    function downloadUniChartPNG()   { dlPNG('uniChart',    'WVR_Univariate_'      + document.getElementById('uniCtry').value.replace(/ /g,'_')); }
+
+    // ════════════════════════════════════════════════════════
+    // UNIVARIATE CSV — descriptive stats, all countries
     // ════════════════════════════════════════════════════════
     function downloadUniCSV() {
       const allCountries = [...COUNTRIES, 'SE Asia Avg'];
-      const rows = ['Country,Mean,Max,Min,Std Deviation'];
+      const rows = [
+        '# UNIVARIATE ANALYSIS — Water Vapour Mixing Ratio (WVR)',
+        '# Southeast Asia · 2005–2025 · SBEG3703',
+        '#',
+        '# COMPUTATION METHODOLOGY:',
+        '#   n    = number of monthly observations',
+        '#   Mean = (1/n) × Σ xᵢ',
+        '#   Max / Min = maximum / minimum monthly WVR value',
+        '#   Std Dev (σ) = sqrt[ Σ(xᵢ − mean)² / n ]  (population standard deviation)',
+        '#   Range = Max − Min',
+        '#',
+        'Country,n,Mean (g/kg),Max (g/kg),Min (g/kg),Std Dev (g/kg),Range (g/kg)'
+      ];
       allCountries.forEach(country => {
         const isSEA = country === 'SE Asia Avg';
         const monthly = isSEA ? seaAvgMonthly : RAW[country];
         const st = vstat(monthly);
         rows.push([
-          isSEA ? 'SEA' : country,
+          isSEA ? 'SE Asia Avg' : country,
+          st.n,
           st.mean.toFixed(4),
           st.max.toFixed(4),
           st.min.toFixed(4),
-          st.std.toFixed(4)
+          st.std.toFixed(4),
+          st.range.toFixed(4)
         ].join(','));
       });
       const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'Univariate_stats.csv';
+      const a = document.createElement('a'); a.href = url; a.download = 'WVR_Univariate_Stats.csv';
       a.click(); URL.revokeObjectURL(url);
     }
 
     // ════════════════════════════════════════════════════════
-    // TREND CSV DOWNLOAD — slope per country × epoch
+    // LINEAR TREND CSV — OLS slope per country × epoch
     // ════════════════════════════════════════════════════════
     function downloadTrendCSV() {
       const allCountries = [...COUNTRIES, 'SE Asia Avg'];
-      const epLabels = EPOCHS.map(ep => `"${ep.label}"`);
-      const rows = ['Country,' + epLabels.join(',')];
+      const rows = [
+        '# LINEAR TREND ANALYSIS — WVR Trend by Epoch',
+        '# Southeast Asia · 2005–2025 · SBEG3703',
+        '#',
+        '# COMPUTATION METHODOLOGY:',
+        '#   Method : Ordinary Least Squares (OLS) Linear Regression',
+        '#   Model  : WVR(t) = m·t + b',
+        '#     t = month index (0-based within the full 252-month series)',
+        '#     m = slope (g/kg/month)   b = intercept (g/kg)',
+        '#   Annual slope = m × 12  (g/kg/year)',
+        '#   Direction: Increasing if slope > 0 | Decreasing if slope < 0',
+        '#',
+        '# EPOCHS:',
+        '#   Epoch 1: 2005–2009 (60 months)   Epoch 2: 2010–2014 (60 months)',
+        '#   Epoch 3: 2015–2019 (60 months)   Epoch 4: 2020–2025 (72 months)',
+        '#',
+        'Country,' + EPOCHS.map(ep => `"${ep.label} Slope (g/kg/yr)"`).join(',') + ',' + EPOCHS.map(ep => `"${ep.label} Direction"`).join(',')
+      ];
       allCountries.forEach(country => {
         const isSEA = country === 'SE Asia Avg';
         const monthly = isSEA ? seaAvgMonthly : RAW[country];
         const slopes = EPOCHS.map(ep => {
           const mxs = Array.from({ length: ep.me - ep.ms + 1 }, (_, k) => ep.ms + k);
-          const mys = mxs.map(x => monthly[x]);
-          const { m } = linReg(mxs, mys);
-          const mPerYear = m * 12;
-          const sign = mPerYear >= 0 ? '+' : '';
-          return `"${sign}${mPerYear.toFixed(4)} g/kg/yr"`;
+          const { m } = linReg(mxs, mxs.map(x => monthly[x]));
+          return m * 12;
         });
-        rows.push([country === 'SE Asia Avg' ? 'SEA' : country, ...slopes].join(','));
+        rows.push([
+          isSEA ? 'SE Asia Avg' : country,
+          ...slopes.map(s => `"${s >= 0 ? '+' : ''}${s.toFixed(4)}"`),
+          ...slopes.map(s => `"${s > 0 ? 'Increasing' : s < 0 ? 'Decreasing' : 'Stable'}"`)
+        ].join(','));
       });
       const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'Trend_slope_by_epoch.csv';
+      const a = document.createElement('a'); a.href = url; a.download = 'WVR_LinearTrend_by_Epoch.csv';
       a.click(); URL.revokeObjectURL(url);
     }
 
     // ════════════════════════════════════════════════════════
-    // ACF CSV DOWNLOAD — all countries × all epochs
+    // MOVING AVERAGE CSV — monthly WVR + 3-month MA
     // ════════════════════════════════════════════════════════
-    function downloadACFCSV() {
-      const allCountries = ['Vietnam','Myanmar','Laos','Philippines','Thailand','Cambodia','SE Asia Avg','Brunei','Malaysia','Singapore','Indonesia','Timor-Leste'];
-      const rows = ['Epoch,Country,Lag-1,Lag-3,Lag-6,Lag-12'];
-      EPOCHS.forEach(ep => {
-        allCountries.forEach(country => {
-          const isSEA = country === 'SE Asia Avg';
-          const monthly = isSEA ? seaAvgMonthly : RAW[country];
-          const epData = monthly.slice(ep.ms, ep.me + 1);
-          const vals = acf(epData, 12).slice(1);
+    function downloadMACSV() {
+      const country = document.getElementById('maCtry').value;
+      const isSEA = country === 'SE Asia Avg';
+      const monthly = isSEA ? seaAvgMonthly : RAW[country];
+      const ma = movAvg(monthly, 3);
+      const rows = [
+        `# MOVING AVERAGE (3-MONTH) ANALYSIS — ${country}`,
+        '# Southeast Asia · 2005–2025 · SBEG3703',
+        '#',
+        '# COMPUTATION METHODOLOGY:',
+        '#   Trailing 3-Month Moving Average:',
+        '#   MA(t) = [ X(t−2) + X(t−1) + X(t) ] / 3',
+        '#   where X(t) = WVR observation at month t',
+        '#   Jan 2005 and Feb 2005 are blank — insufficient preceding observations',
+        '#   MA smooths short-term fluctuations to reveal the underlying trend',
+        '#',
+        'Month,WVR (g/kg),3-Month MA (g/kg)'
+      ];
+      const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      YEARS.forEach((year, yi) => {
+        MON.forEach((mon, mi) => {
+          const idx = yi * 12 + mi;
+          const maVal = ma[idx];
           rows.push([
-            ep.label,
-            country,
-            +vals[0].toFixed(4),
-            +vals[2].toFixed(4),
-            +vals[5].toFixed(4),
-            +vals[11].toFixed(4)
+            `${year}-${mon}`,
+            monthly[idx].toFixed(4),
+            (maVal === null || maVal === undefined) ? '' : maVal.toFixed(4)
           ].join(','));
         });
       });
       const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = 'ACF_by_epoch.csv';
+      a.href = url; a.download = `WVR_MovingAverage_${country.replace(/ /g,'_')}.csv`;
+      a.click(); URL.revokeObjectURL(url);
+    }
+
+    // ════════════════════════════════════════════════════════
+    // ACF CSV — all countries × all epochs
+    // ════════════════════════════════════════════════════════
+    function downloadACFCSV() {
+      const allCountries = ['Vietnam','Myanmar','Laos','Philippines','Thailand','Cambodia','SE Asia Avg','Brunei','Malaysia','Singapore','Indonesia','Timor-Leste'];
+      const rows = [
+        '# AUTOCORRELATION FUNCTION (ACF) ANALYSIS',
+        '# Southeast Asia · 2005–2025 · SBEG3703',
+        '#',
+        '# COMPUTATION METHODOLOGY:',
+        '#   ACF(k) = Σ[ (x(t) − μ)(x(t+k) − μ) ] / Σ[ (x(t) − μ)² ]',
+        '#   where k = lag (months),  μ = mean of the epoch series',
+        '#   Significance bounds: ± 1.96 / √n  (95% confidence, Bartlett approximation)',
+        '#   ACF > 0 → positive autocorrelation (persistence / trend)',
+        '#   ACF < 0 → negative autocorrelation (oscillation / mean-reversion)',
+        '#   ACF ≈ 0 → no significant autocorrelation (near-random)',
+        '#',
+        'Epoch,Country,Lag-1,Lag-3,Lag-6,Lag-12'
+      ];
+      EPOCHS.forEach(ep => {
+        allCountries.forEach(country => {
+          const isSEA = country === 'SE Asia Avg';
+          const monthly = isSEA ? seaAvgMonthly : RAW[country];
+          const vals = acf(monthly.slice(ep.ms, ep.me + 1), 12).slice(1);
+          rows.push([
+            ep.label, country,
+            +vals[0].toFixed(4), +vals[2].toFixed(4),
+            +vals[5].toFixed(4), +vals[11].toFixed(4)
+          ].join(','));
+        });
+      });
+      const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'WVR_ACF_by_Epoch.csv';
       a.click(); URL.revokeObjectURL(url);
     }
 
