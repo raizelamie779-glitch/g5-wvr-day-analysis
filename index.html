@@ -1305,46 +1305,93 @@
     }
 
     // ════════════════════════════════════════════════════════
-    // LINEAR TREND CSV — OLS slope per country × epoch
+    // LINEAR TREND XLSX — one sheet per country, all 4 epochs
+    // each epoch shows: x, y, x², y², xy, ŷ + summary block
     // ════════════════════════════════════════════════════════
     function downloadTrendCSV() {
+      const wb = XLSX.utils.book_new();
+      const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const allCountries = [...COUNTRIES, 'SE Asia Avg'];
-      const rows = [
-        '# LINEAR TREND ANALYSIS — WVR Trend by Epoch',
-        '# Southeast Asia · 2005–2025 · SBEG3703',
-        '#',
-        '# COMPUTATION METHODOLOGY:',
-        '#   Method : Ordinary Least Squares (OLS) Linear Regression',
-        '#   Model  : WVR(t) = m·t + b',
-        '#     t = month index (0-based within the full 252-month series)',
-        '#     m = slope (g/kg/month)   b = intercept (g/kg)',
-        '#   Annual slope = m × 12  (g/kg/year)',
-        '#   Direction: Increasing if slope > 0 | Decreasing if slope < 0',
-        '#',
-        '# EPOCHS:',
-        '#   Epoch 1: 2005–2009 (60 months)   Epoch 2: 2010–2014 (60 months)',
-        '#   Epoch 3: 2015–2019 (60 months)   Epoch 4: 2020–2025 (72 months)',
-        '#',
-        'Country,' + EPOCHS.map(ep => `"${ep.label} Slope (g/kg/yr)"`).join(',') + ',' + EPOCHS.map(ep => `"${ep.label} Direction"`).join(',')
-      ];
+
       allCountries.forEach(country => {
         const isSEA = country === 'SE Asia Avg';
         const monthly = isSEA ? seaAvgMonthly : RAW[country];
-        const slopes = EPOCHS.map(ep => {
-          const mxs = Array.from({ length: ep.me - ep.ms + 1 }, (_, k) => ep.ms + k);
-          const { m } = linReg(mxs, mxs.map(x => monthly[x]));
-          return m * 12;
+
+        const wsData = [
+          ['LINEAR TREND ANALYSIS — Water Vapour Mixing Ratio (WVR)'],
+          [`Country: ${isSEA ? 'SE Asia Avg' : country}`],
+          ['Southeast Asia  ·  2005–2025  ·  SBEG3703'],
+          [''],
+          ['COMPUTATION METHODOLOGY'],
+          ['Method: Ordinary Least Squares (OLS) Linear Regression'],
+          ['Model:  ŷ = a + b·x'],
+          ['  x = month index within epoch (1 = first month of epoch)'],
+          ['  y = WVR observation (g/kg)'],
+          ['  b (slope)     = (n·Σxy − Σx·Σy) / (n·Σx² − (Σx)²)'],
+          ['  a (intercept) = (Σy − b·Σx) / n'],
+          ['  ŷ (fitted)    = a + b·x'],
+          ['  Annual slope  = b × 12  (g/kg/year)'],
+          [''],
+        ];
+
+        EPOCHS.forEach((ep, ei) => {
+          const n   = ep.me - ep.ms + 1;
+          const xs  = Array.from({ length: n }, (_, i) => i + 1);
+          const ys  = Array.from({ length: n }, (_, i) => monthly[ep.ms + i]);
+
+          const sumX  = xs.reduce((s, v)    => s + v,       0);
+          const sumY  = ys.reduce((s, v)    => s + v,       0);
+          const sumX2 = xs.reduce((s, v)    => s + v * v,   0);
+          const sumY2 = ys.reduce((s, v)    => s + v * v,   0);
+          const sumXY = xs.reduce((s, v, i) => s + v * ys[i], 0);
+
+          const denom = n * sumX2 - sumX * sumX;
+          const b     = (n * sumXY - sumX * sumY) / denom;
+          const a_int = (sumY - b * sumX) / n;
+
+          wsData.push([`━━ EPOCH ${ei + 1}: ${ep.label} ━━`]);
+          wsData.push(['Month', 'x', 'y (g/kg)', 'x²', 'y²', 'xy', 'ŷ (fitted, g/kg)']);
+
+          xs.forEach((x, i) => {
+            const gIdx = ep.ms + i;
+            const y    = ys[i];
+            wsData.push([
+              `${2005 + Math.floor(gIdx / 12)}-${MON[gIdx % 12]}`,
+              x,
+              +y.toFixed(4),
+              x * x,
+              +(y * y).toFixed(4),
+              +(x * y).toFixed(4),
+              +(a_int + b * x).toFixed(4)
+            ]);
+          });
+
+          wsData.push(['']);
+          wsData.push(['— SUMMARY —', '', '', '', '', '']);
+          wsData.push(['n', 'Σx', 'Σy', 'Σx²', 'Σy²', 'Σxy']);
+          wsData.push([n, +sumX.toFixed(4), +sumY.toFixed(4), +sumX2.toFixed(4), +sumY2.toFixed(4), +sumXY.toFixed(4)]);
+          wsData.push(['']);
+          wsData.push(['b (slope)',     '= (n·Σxy − Σx·Σy) / (n·Σx² − (Σx)²)', '=', +b.toFixed(6),         'g/kg/month']);
+          wsData.push(['a (intercept)', '= (Σy − b·Σx) / n',                     '=', +a_int.toFixed(6),    'g/kg']);
+          wsData.push(['Annual slope',  '= b × 12',                               '=', +(b * 12).toFixed(6), 'g/kg/yr']);
+          wsData.push(['Direction',     '',                                        '',  b * 12 > 0 ? 'Increasing' : b * 12 < 0 ? 'Decreasing' : 'Stable']);
+          wsData.push(['', '', '', '', '', '']);
         });
-        rows.push([
-          isSEA ? 'SE Asia Avg' : country,
-          ...slopes.map(s => `"${s >= 0 ? '+' : ''}${s.toFixed(4)}"`),
-          ...slopes.map(s => `"${s > 0 ? 'Increasing' : s < 0 ? 'Decreasing' : 'Stable'}"`)
-        ].join(','));
+
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        ws['!cols'] = [
+          { wch: 14 }, // Month
+          { wch:  6 }, // x
+          { wch: 12 }, // y
+          { wch: 10 }, // x²
+          { wch: 14 }, // y²
+          { wch: 14 }, // xy
+          { wch: 18 }, // ŷ
+        ];
+        XLSX.utils.book_append_sheet(wb, ws, isSEA ? 'SE Asia Avg' : country.substring(0, 31));
       });
-      const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'WVR_LinearTrend_by_Epoch.csv';
-      a.click(); URL.revokeObjectURL(url);
+
+      XLSX.writeFile(wb, 'WVR_LinearTrend_AllCountries.xlsx');
     }
 
     // ════════════════════════════════════════════════════════
